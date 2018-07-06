@@ -1,0 +1,19 @@
+@startuml
+WIN32 -> keylistener: <<shortkey is pressed>>
+alt shortkey is registered
+
+keylistener -> gui: take_action(action_id)
+
+alt action_id is for gui items (e.g. Hide)
+gui -> gui: <<execute command>>
+else action_id is for fields
+gui -> field: get_dataprovider()
+gui <-- field: dataprovider_name
+gui-> data_provider: get_data()
+
+end
+
+else shortkey is not registered
+
+end
+@enduml

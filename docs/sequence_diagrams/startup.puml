@@ -1,0 +1,28 @@
+@startuml
+main -> User: <<get config_idx>>
+main <-- User: config_idx
+main -> config: get_config(config_idx)
+
+' currently this behaviour is considered as bad '
+/' loop for each field within this config
+config -> field: _init_
+field -> data_provider: get_data_provider(name)
+field <-- data_provider: data_provder
+config -> field: get_hotkey()
+config <-- field: hotkey_str
+end '/
+
+config --> main: config
+
+main -> gui: _init_(config)
+
+main -> keylistener: _init_(gui)
+main -> keylistener: register_keys()
+keylistener -> GUI: get_hotkeys()
+gui <- gui: <<hotkeys of the gui>>
+gui -> config: get_hotkeys()
+gui <-- config: <<hotkeys of all fields>>
+keylistener <-- GUI: <<array with all hotkeys>>
+main -> keylistener: start_listening()
+
+@enduml

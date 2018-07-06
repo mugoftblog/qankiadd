@@ -1,0 +1,3 @@
+- After each hotkey press some notification should popup, which informs about success of that operation.
+- we should be able to set-up backups or maximum number of records per file
+- it should be store recordes not only for anki, but also for other memcards apps
