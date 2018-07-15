@@ -26,9 +26,10 @@ class AnkiExporter(FileExporter):
                     # no errors, write to the file
                     line = ""
                     for field in field_models:
-                        line += field.get_text()
+                        line += field.get_text() + ";"
 
-                    line += "\n"
+                    line = line[:-1] #remove last semicolon
+                    line += "\r\n"
                     f.write(line.encode('utf-8'))
                     do_try = False
             except IOError as e:
@@ -48,7 +49,8 @@ class AnkiExporter(FileExporter):
                     # some critical error occured - can't continue anymore
                     line = ""
                     for field in field_models:
-                        line += field.get_text()
+                        line += field.get_text() + ";"
+                    line += "\r\n"
 
                     logging.info(line.encode('utf-8'))
                     logging.error("%s, path=\"%s\", exit the program" % (e, self.get_path()))

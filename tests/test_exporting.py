@@ -4,10 +4,10 @@ import msvcrt
 import time
 
 field1 = FieldModel(None)
-field1.set_text("Field1")
+field1.set_text("Question")
 
 field2 = FieldModel(None)
-field1.set_text("Field2")
+field2.set_text("Answer")
 
 fields = [field1, field2]
 
