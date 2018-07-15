@@ -9,6 +9,7 @@ __maintainer__ = "Ivan Gushchin"
 __email__ = "mug0ft10@gmail.com"
 
 
+import logging
 from config import *
 from gui import *
 from keylistener import *
@@ -42,6 +43,7 @@ def start_app(cfg):
 
 
 def main():
+    logging.basicConfig(filename='qankiadd.log', level=logging.INFO)
     print('Please select the configuration:')
     i = 0
     for cfg in configurations:

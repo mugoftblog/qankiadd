@@ -31,7 +31,7 @@ class FieldController:
         # txt = txt.replace("\r", " ")
         # txt = txt.replace("\n", " ")
         #
-        # if self.addmode == Addmode.I and self.text == "":  # TODO test more elegantly for empty strings
+        # if self.addmode == AddMode.Ignore and self.text == "":  # TODO test more elegantly for empty strings
         #     self.text = txt
         # elif self.addmode == Addmode.W:
         #     self.text = txt

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<Root>
+    <Configuration name="Foreign Language">
+        <Field name="Question" addmode="IgNore">
+            <Key1>Ctrl</Key1>
+            <Key2>B</Key2>
+            <DataProvider>Clipboard</DataProvider>
+        </Field>
+        <Field name="Answer" addmode="WRite">
+            <ObservableField>Question</ObservableField>
+            <DataProvider>GoogleTranslate</DataProvider>
+        </Field>
+    </Configuration>
+</Root>

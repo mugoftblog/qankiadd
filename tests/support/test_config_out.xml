@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Root>
+  <Configuration name="Foreign Language">
+    <Field addmode="Ignore" name="ChangedName 0">
+      <Key1>Ctrl</Key1>
+      <Key2>B</Key2>
+      <DataProvider>Clipboard</DataProvider>
+    </Field>
+    <Field addmode="Write" name="ChangedName 1">
+      <ObservableField>Question</ObservableField>
+      <DataProvider>GoogleTranslate</DataProvider>
+    </Field>
+  </Configuration>
+</Root>

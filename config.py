@@ -1,5 +1,5 @@
 from enum import Enum
-from dataprov.dataprov_factory import *
+from dataprov.factory import *
 """
 The calsses in this file contain configurtion descriptions.
 
@@ -10,10 +10,10 @@ Each configuration contains the list of fields.
 
 ##################defines######################
 
-class Addmode(Enum):
-    I = 0,  # ignore - if field is not empty do nothing
-    W = 1,  # write - the field will be rewritten
-    A = 2,  # append = new text will be appended to the field
+class AddMode(Enum):
+    Ignore = 0,  # ignore - if field is not empty do nothing
+    Write = 1,  # write - the field will be rewritten
+    Append = 2,  # append = new text will be appended to the field
 
 #this enum describes how the information is added to the field after shortkey press
 #or after trigger execution
@@ -24,7 +24,7 @@ class Addmode(Enum):
 #  classes start  #
 
 class FieldCfg:
-    def __init__(self, name, shortkey, observable_name, addmode, dataprov_type):
+    def __init__(self, name, shortkey=None, observable_field=None, addmode=AddMode.Write, dataprov_type=None):
         """
         :param name:
         :param shortkey:
@@ -34,13 +34,13 @@ class FieldCfg:
         """
         self.name = name
         self._shortkey = shortkey
-        self.observable_name = observable_name
+        self.observable_field = observable_field
         self._addmode = addmode
         self.dataprov_type = dataprov_type
 
 
 class Config:
-    def __init__(self, name, field_cfgs, autosave=True):
+    def __init__(self, name, field_cfgs=[], autosave=True):
         """
         :param name: name of the configuration
         :param fields: array with field models
@@ -64,9 +64,9 @@ HOTKEY_ANSWER = ("ctrl", "spacebar")
  and indexes always change whenever the order of added fields is changed """
 configurations = [
     Config("Foreign Language",
-           [FieldCfg("Question", HOTKEY_QUESTION,  "Answer",     Addmode.I, DataProvTypes.MANUAL),        # 0
-            FieldCfg("Question", HOTKEY_QUESTION,  None,         Addmode.I, DataProvTypes.MANUAL),
-            FieldCfg("Answer",   HOTKEY_ANSWER,   "Question",    Addmode.I, DataProvTypes.GOOGLETRANS),
-            FieldCfg("Answer",   HOTKEY_ANSWER,   "Question",    Addmode.I, DataProvTypes.GOOGLETRANS)],  # 1
+           [FieldCfg("Question", HOTKEY_QUESTION,  "Answer",     AddMode.Ignore, None),        # 0
+            FieldCfg("Question", HOTKEY_QUESTION,  None,         AddMode.Ignore, None),
+            FieldCfg("Answer",   HOTKEY_ANSWER,   "Question",    AddMode.Ignore, DataProvType.GoogleTranslate),
+            FieldCfg("Answer",   HOTKEY_ANSWER,   "Question",    AddMode.Ignore, DataProvType.GoogleTranslate)],  # 1
            False)
 ]
