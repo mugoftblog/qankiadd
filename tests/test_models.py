@@ -13,11 +13,6 @@ text_test_normal = "Test"
 text_test_special_chars = "Ein Beiespiel: königsee ärzte übersetzer"
 
 
-def print_cfg(cfg):
-    for field in cfg.field_cfgs:
-        print("FieldCfg(\"%s\", HOTKEY, \"%s\")" % (field.name, field.observable_field))
-
-
 cfg_not_unique = Config("Not unique names",
              [FieldCfg("Question", HOTKEY_QUESTION, "WrongName", AddMode.Ignore, None), # observer with specified name doesn't exit
               FieldCfg("Definition", HOTKEY_QUESTION, "Definition", AddMode.Ignore, AddMode.Append),  #observer name is the same as field name
@@ -61,7 +56,7 @@ def test_models_unique():
     for cfg_field in cfg_not_unique.field_cfgs:
         assert cfg_field.name not in names_set, "Cfg %u should contain unique name" % i
         names_set.add(cfg_field.name)
-        i+=1
+        i += 1
 
     assert cfg_not_unique.field_cfgs[1].observable_field != cfg_not_unique.field_cfgs[1].name,\
            "Field \"%s\" has the same name as observable_field" % \
@@ -79,7 +74,7 @@ def test_models_set_text():
     model_mng = ModelManager(cfg_set_text)
 
     field = model_mng.get_field("Question")
-    assert field != None
+    assert field is not None
 
     field.set_text(text_test_normal)
 

@@ -19,7 +19,9 @@ class AddMode(Enum):
 #or after trigger execution
 #TODO should be in dataprov_factory file
 
-
+def print_cfg(cfg):
+    for field in cfg.field_cfgs:
+        print("FieldCfg(\"%s\", HOTKEY, \"%s\")" % (field.name, field.observable_field))
 
 #  classes start  #
 

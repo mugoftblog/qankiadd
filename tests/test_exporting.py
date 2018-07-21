@@ -2,11 +2,14 @@ from exporting.anki import *
 import shutil
 import msvcrt
 import time
+from config import *
 
-field1 = FieldModel(None)
-field1.set_text("Question")
+field1_cfg = FieldCfg("QuestionÄ", None, None, AddMode.Ignore, None)
+field1 = FieldModel(field1_cfg)
+field1.set_text("QuestionÄ")
 
-field2 = FieldModel(None)
+field2_cfg = FieldCfg("Answer", None, None, AddMode.Ignore, None)
+field2 = FieldModel(field2_cfg)
 field2.set_text("Answer")
 
 fields = [field1, field2]

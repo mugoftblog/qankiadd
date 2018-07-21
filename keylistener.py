@@ -5,6 +5,21 @@ from ctypes import windll
 
 byref = ctypes.byref
 
+MOD_ALT = win32con.MOD_ALT
+MOD_CTRL = win32con.MOD_CONTROL
+MOD_SHIFT = win32con.MOD_SHIFT
+MOD_WIN = win32con.MOD_WIN
+
+modifers = {
+    'shift': MOD_SHIFT,
+    'ctrl': MOD_CTRL,
+    'control': MOD_CTRL,
+    'alt': MOD_ALT,
+    'win': MOD_WIN,
+
+
+}
+
 vk_code = {'backspace': 0x08,
            'tab': 0x09,
            'clear': 0x0C,
@@ -153,6 +168,22 @@ vk_code = {'backspace': 0x08,
            '`': 0xC0
 }
 
+KEY_QUIT = 'q'
+key_tuple_quit = ('ctrl', KEY_QUIT)
+key_tuple_quit_codes = (vk_code[key_tuple_quit[0]], vk_code[key_tuple_quit[1]])
+key_tuple_quit_action_id = 0xFFFFFFAA
+
+
+class KeylistenerObserver:
+    def __init__(self, key_tuple=None):
+        self._key_tuple = key_tuple
+
+    def key_pressed(self, key_tuple):
+        raise NotImplementedError('subclasses must override NotifyKeyPressed(id)!')
+
+    def get_key(self):
+        return self._key_tuple
+
 
 class Keylistener:
     """
@@ -162,38 +193,76 @@ class Keylistener:
     from the message and pass this information to the GUI object, which further decides how to handle this information.
     """
 
-    def __init__(self, gui):
-        self._gui = gui
+    def __init__(self):
+        self._observers = []
 
-    def register_keys(self):
-        hotkeys_str = self._gui.get_hotkeys()
+    def register_observer(self, observer):
+        if issubclass(type(observer), KeylistenerObserver):
+            if self.register_key(observer.get_key()):
+                self._observers.append(observer)
+        else:
+            raise TypeError("KeylistenerObserver is expected")
 
-        for action_id, (modifier_str, vk_str) in hotkeys_str:
-            print("Registering id", action_id, "for key", vk_str)
-            if not windll.user32.RegisterHotKey(None, action_id, vk_code[modifier_str], vk_code[vk_str]):
-                print("Unable to register id", action_id)
 
-    def unregister_keys(self):
-        hotkeys_str = self._gui.get_hotkeys()
+    def register_key(self, key_tuple, action_id = 0):
+        ret = False
+        if (key_tuple is not None) and (len(key_tuple) == 2):
+            if key_tuple[0] != "" and key_tuple[1] != "":
+                modifier = modifers[key_tuple[0]]
+                vk = vk_code[key_tuple[1]]
+                print("Keycodes %s %s" % (modifier, vk))
+                if not windll.user32.RegisterHotKey(None, action_id, modifier, vk):
+                    print("Unable to register key %s %s" % (modifier, vk))
+                else:
+                    ret = True
 
-        for action_id, (modifier_str, vk_str) in hotkeys_str:
-            print("Unregistering id", action_id, "for key", vk_str)
-            if not windll.user32.UnregisterHotKey(None, action_id):
-                print("Unable to unregister id", action_id)
+#win32con.MOD_CONTRO
+    # def register_keys(self):
+    #     hotkeys_str = self._gui.get_hotkeys()
+    #
+    #     for action_id, (modifier_str, vk_str) in hotkeys_str:
+    #         print("Registering id", action_id, "for key", vk_str)
+    #         if not windll.user32.RegisterHotKey(None, action_id, vk_code[modifier_str], vk_code[vk_str]):
+    #             print("Unable to register id", action_id)
+    #
+    # def unregister_keys(self):
+    #     hotkeys_str = self._gui.get_hotkeys()
+    #
+    #     for action_id, (modifier_str, vk_str) in hotkeys_str:
+    #         print("Unregistering id", action_id, "for key", vk_str)
+    #         if not windll.user32.UnregisterHotKey(None, action_id):
+    #             print("Unable to unregister id", action_id)
 
     def start_listening(self):
         """ Start key press monitoring - in case key is pressed, take the action """
+        self.register_key(key_tuple_quit, key_tuple_quit_action_id)
         try:
             msg = wintypes.MSG()
             while windll.user32.GetMessageA(byref(msg), None, 0, 0) != 0:
                 if msg.message == win32con.WM_HOTKEY:
                     action_id = msg.wParam
-                    print("Action ID = id", action_id)
+                    keycode = (msg.lParam >> 16) & 0xFFFF
+                    modifiers = msg.lParam & 0xFFFF
+                    key_tuple = (keycode, modifiers)
 
-                    self._gui.take_action(action_id)
+                    # check if have observer with the key
+                    for observer in self._observers:
+                        observer.key_pressed(key_tuple)
+
+                    print("AHA", key_tuple_quit_codes[0], key_tuple_quit_codes[1])
+                    if keycode == vk_code[KEY_QUIT] \
+                        and (modifiers == vk_code['ctrl']
+                             or modifiers == vk_code['left_control']
+                             or modifiers == vk_code['right_control']
+                             or modifiers == MOD_CTRL
+                             ):
+                        print("key listening is STOPPED")
+                        break
 
                     windll.user32.TranslateMessage(byref(msg))
                     windll.user32.DispatchMessageA(byref(msg))
 
         finally:
-            self.unregister_keys()
+            print("finally")
+            pass
+           # self.unregister_keys() TODO

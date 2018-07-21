@@ -1,7 +1,9 @@
 import logging
 from dataprov.factory import *
+from keylistener import *
 
-class FieldModel:
+
+class FieldModel(KeylistenerObserver):
     TEXT_LEN_MAX = 3000
 
     def __init__(self, field_cfg):
@@ -9,12 +11,21 @@ class FieldModel:
         :param field_cfg: field configuration
         """
         self.cfg = field_cfg
+        KeylistenerObserver.__init__(self, self.cfg._shortkey)
         self.observers = []
         self._text = ""
         self._dataprov = None
+        # self._id = None
 
     def set_dataprov(self, dataprov):
         self._dataprov = dataprov
+
+    # def set_id(self, id):
+    #     self._id = id
+
+    def key_pressed(self, key):
+        print("KeyPressed %s %s" % (key[0], key[1]))
+        pass
 
     def set_text(self, text):
         text_set = text
@@ -89,6 +100,7 @@ class ModelManager:
 
             #add observer to the observable field
 
+
     def _set_id(self, m):
         raise NotImplementedError
         #while 1:
@@ -146,4 +158,4 @@ class ModelManager:
 
     def get_fields(self):
         "Get all fields."
-        raise NotImplementedError
+        return list(self._fields.values())

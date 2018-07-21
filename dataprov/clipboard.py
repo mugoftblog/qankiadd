@@ -1,12 +1,12 @@
 import win32clipboard
 from dataprov.base import *
-
-
-def delegate_clipboard(field):
-    win32clipboard.OpenClipboard()
-    text = win32clipboard.GetClipboardData(win32clipboard.CF_UNICODETEXT)
-    win32clipboard.CloseClipboard() #TODO try catch
-    field.set_text(text)
+#
+#
+# def delegate_clipboard(field):
+#     win32clipboard.OpenClipboard()
+#     text = win32clipboard.GetClipboardData(win32clipboard.CF_UNICODETEXT)
+#     win32clipboard.CloseClipboard() #TODO try catch
+#     field.set_text(text)
 
 
 class Clipboard(DataProv):
