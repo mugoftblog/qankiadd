@@ -3,6 +3,7 @@ import shutil
 import msvcrt
 import time
 from config import *
+from models import *
 
 field1_cfg = FieldCfg("QuestionÄ", None, None, AddMode.Ignore, None)
 field1 = FieldModel(field1_cfg)
@@ -53,6 +54,7 @@ def test_exporting_dir_dontexist():
     anki.write(fields)
 
     f = open(anki._path, 'r')
+
     assert f.readline() != ""
     f.close()
 

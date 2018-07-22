@@ -1,6 +1,8 @@
 from config import *
 from dataprov.factory import *
+import sys
 import xml.etree.ElementTree as ET
+import logging
 
 ELEM_ROOT = 'Root'
 ELEM_CONFIG = 'Configuration'
@@ -11,6 +13,7 @@ ELEM_OBSERVABLE_FIELD = "ObservableField"
 ELEM_DATA_PROVIDER = "DataProvider"
 ATTR_ADDMODE = 'addmode'
 ATTR_NAME = 'name'
+
 
 class ConfigImproter:
     def __init__(self, path):
@@ -58,21 +61,20 @@ class ConfigImproter:
                             addmode = AddMode[Field.get(ATTR_ADDMODE).title()]
                             field_cfg._addmode = addmode
                         except KeyError:
-                            print("LOG: ConfigImproter::read wrong addmode \"%s\" in config file" %
-                                  Field.get(ATTR_ADDMODE))
+                            logging.warning("wrong addmode \"%s\" in config file" % Field.get(ATTR_ADDMODE))
 
                         # try to find key1 and key2
-                        key1_str = ""
+                        mod_str = ""
                         key_elem = Field.find(ELEM_MOD)
                         if key_elem is not None:
-                            key1_str = key_elem.text
+                            mod_str = key_elem.text.lower()
 
-                        key2_str = ""
+                        key_str = ""
                         key_elem = Field.find(ELEM_KEY)
                         if key_elem is not None:
-                            key2_str = key_elem.text
+                            key_str = key_elem.text.lower()
 
-                        field_cfg._shortkey = (key1_str, key2_str)
+                        field_cfg._shortkey = (mod_str, key_str)
 
                         # try to find obervable name
                         obervable_elem = Field.find(ELEM_OBSERVABLE_FIELD)
@@ -83,20 +85,19 @@ class ConfigImproter:
                         dataprov_elem = Field.find(ELEM_DATA_PROVIDER)
                         if dataprov_elem is not None:
                             try:
-                                field_cfg.dataprov_type = DataProvType[dataprov_elem.text]
+                                field_cfg.dataprov_type = DataProvType[dataprov_elem.text.title()]
                             except KeyError:
-                                print("LOG: ConfigImproter::read wrong dataprov_type \"%s\" in config file" %
-                                      dataprov_elem.text)
-
+                                logging.warning("wrong dataprov_type \"%s\" in config file" % dataprov_elem.text)
 
                         cfg.field_cfgs.append(field_cfg)
 
                     self.cfg_list.append(cfg)
-            except ET.ParseError:
-                print("LOG: ConfigImproter::read can't parse file")
+            except ET.ParseError as e:
+                logging.error(e)
+                sys.exit(1)
             except FileNotFoundError as e:
-                print("LOG: ConfigImproter::read can't find file")
-                print(e)
+                logging.error(e)
+                sys.exit(1)
 
     def write(self):
         root = ET.Element(ELEM_ROOT)

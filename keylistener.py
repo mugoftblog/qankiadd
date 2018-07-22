@@ -3,6 +3,8 @@ import ctypes
 from ctypes import wintypes
 from ctypes import windll
 import time
+import logging
+import sys
 
 byref = ctypes.byref
 
@@ -200,12 +202,12 @@ class Keylistener:
     def _unregister_key(self, key_tuple):
         key_id = self._key_ids.get(key_tuple, None)
         if key_id is not None:
-            print("Unregistering key (\'%s\', \'%s\')" % (key_tuple[0], key_tuple[1]))
+            logging.debug("Unregistering key (\'%s\', \'%s\')" % (key_tuple[0], key_tuple[1]))
             if not windll.user32.UnregisterHotKey(None, key_id):
-                print("Unable to unregister key with id=%u" % key_id)
+                logging.warning("Unable to unregister key with id=%u" % key_id)
             else:
                 del self._key_ids[key_tuple]
-                print("Unregistering OK")
+                logging.debug("Unregistering OK")
 
     def _register_key(self, key_tuple):
         ret = False
@@ -214,14 +216,14 @@ class Keylistener:
                 modifier = NAME_TO_MOD_TABLE.get(key_tuple[0], None)
                 vk = NAME_TO_VK_TABLE.get(key_tuple[1], None)
                 if (modifier is not None) and (vk is not None):
-                    print("Registering key (\'%s\', \'%s\')" % (modifier, vk))
+                    logging.info("Registering key (\'%s\', \'%s\')" % (modifier, vk))
                     if not windll.user32.RegisterHotKey(None, self._key_id_last, modifier, vk):
-                        print("Unable to register key")
+                        logging.warning("Unable to register key")
                     else:
                         self._key_ids[key_tuple] = self._key_id_last
                         self._key_id_last += 1
                         ret = True
-                        print("Registering OK")
+                        logging.debug("Registering OK")
         return ret
 
     def register_observer(self, observer):
@@ -231,12 +233,13 @@ class Keylistener:
                 if self._register_key(key_tuple_str):
                     self._observers.append(observer)
         else:
-            raise TypeError("KeylistenerObserver is expected")
+            logging.error("KeylistenerObserver is expected")
+            sys.exit(1)
 
 
     def start_listening(self):
         """ Start key press monitoring - in case key is pressed, take the action """
-        print("Key listening STARTED")
+        logging.debug("Key listening is STARTED")
         self._register_key(KEY_QUIT_TUPLE_STR)
         try:
             msg = wintypes.MSG()
@@ -245,15 +248,15 @@ class Keylistener:
                     # action_id = msg.wParam
                     keycode = (msg.lParam >> 16) & 0xFFFF
                     modifier = msg.lParam & 0xFFFF
+                    logging.debug("Keypressed (%s, %s)" % (modifier, keycode))
 
                     if keycode == NAME_TO_VK_TABLE[KEY_QUIT] and modifier == win32con.MOD_CONTROL:
-                        print("Key listening STOPPED")
+                        logging.debug("Key listening STOPPED")
                         break
                     else:
                         # notify observers about pressed key
                         key_tuple = (MOD_TO_NAME_TABLE[modifier], VK_TO_NAME_TABLE[keycode])
                         for observer in self._observers:
-                            print("Keypressed %s %s" % (key_tuple[0], key_tuple[1]))
                             observer.key_pressed(key_tuple)
 
                     windll.user32.TranslateMessage(byref(msg))

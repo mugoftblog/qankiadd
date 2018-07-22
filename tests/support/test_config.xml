@@ -8,7 +8,7 @@
         </Field>
         <Field name="Answer" addmode="WRite">
             <ObservableField>Question</ObservableField>
-            <DataProvider>GoogleTranslate</DataProvider>
+            <DataProvider>Googletranslate</DataProvider>
         </Field>
     </Configuration>
 </Root>

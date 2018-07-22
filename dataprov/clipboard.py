@@ -1,12 +1,6 @@
 import win32clipboard
 from dataprov.base import *
-#
-#
-# def delegate_clipboard(field):
-#     win32clipboard.OpenClipboard()
-#     text = win32clipboard.GetClipboardData(win32clipboard.CF_UNICODETEXT)
-#     win32clipboard.CloseClipboard() #TODO try catch
-#     field.set_text(text)
+import logging
 
 
 class Clipboard(DataProv):
@@ -15,12 +9,11 @@ class Clipboard(DataProv):
         try:
             DataProv.text = win32clipboard.GetClipboardData(win32clipboard.CF_UNICODETEXT)
         except (TypeError, win32clipboard.error):
-            print("TEST")
             try:
                 DataProv.text = win32clipboard.GetClipboardData(win32clipboard.CF_TEXT)
-                print("LOG: WARNING: Clipboard::update_data can't read unicode data from clipboard")
+                logging.warning("can't read unicode data from clipboard")
             except (TypeError, win32clipboard.error):
-                print("LOG: ERROR: Clipboard::update_data can't access clipboard")
+                logging.error("can't access clipboard")
                 DataProv.text = "ERROR"
         finally:
             win32clipboard.CloseClipboard()

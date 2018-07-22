@@ -28,7 +28,7 @@ class AnkiExporter(FileExporter):
                     for field in field_models:
                         line += field.get_text() + ";"
 
-                    line = line[:-1] #remove last semicolon
+                    line = line[:-1]  # remove last semicolon
                     line += "\r\n"
                     f.write(line.encode('utf-8'))
                     do_try = False

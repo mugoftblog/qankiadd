@@ -2,13 +2,13 @@
 <Root>
   <Configuration name="Foreign Language">
     <Field addmode="Ignore" name="ChangedName 0">
-      <Mod>Ctrl</Mod>
-      <Key>B</Key>
+      <Mod>ctrl</Mod>
+      <Key>b</Key>
       <DataProvider>Clipboard</DataProvider>
     </Field>
     <Field addmode="Write" name="ChangedName 1">
       <ObservableField>Question</ObservableField>
-      <DataProvider>GoogleTranslate</DataProvider>
+      <DataProvider>Googletranslate</DataProvider>
     </Field>
   </Configuration>
 </Root>

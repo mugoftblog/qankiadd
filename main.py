@@ -11,9 +11,19 @@ __email__ = "mug0ft10@gmail.com"
 
 import logging
 from config import *
-from gui import *
+from config_importer import *
+from exporting.anki import *
 from keylistener import *
 from models import *
+
+LOG_FORMAT = "[%(asctime)s  - %(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
+logging.basicConfig(filename='debug.log', format=LOG_FORMAT, level=logging.DEBUG)
+logging.getLogger().addHandler(logging.StreamHandler())
+# logging.basicConfig(filename='qankiadd.log', level=logging.INFO)
+# logging.basicConfig(filename='qankiadd.log', level=logging.ERROR)
+# logging.basicConfig(filename='qankiadd.log', level=logging.WARNING)
+
+CONFIG_PATH_IN = "config.xml"
 
 # TODO more elegant way to have singleton of the Application
 keylstnr = None
@@ -25,35 +35,48 @@ def start_app(cfg):
     #keylstnr.start_listening()
 
 
-"""def ensure_config_file(config_dir: str) -> str:
-    Ensure configuration file exists.
-    import homeassistant.config as config_util
-    config_path = config_util.ensure_config_exists(config_dir)
-
-    if config_path is None:
-        print('Error getting configuration path')
+def ensure_config_file(path):
+    # Ensure configuration file exists.
+    if not os.path.isfile(path):
+        logging.error('Error getting configuration file: \"%s\"' % path)
         sys.exit(1)
-
-    return config_path"""
 
 
 def main():
-    logging.basicConfig(filename='qankiadd.log', level=logging.INFO)
+    # set up logger
+    # read configuration file
+    cfg_importer = ConfigImproter(CONFIG_PATH_IN)
+    cfg_importer.read()
+    cfg_list = cfg_importer.cfg_list
+
     print('Please select the configuration:')
     i = 0
-    for cfg in configurations:
+    for cfg in cfg_list:
         print("%u. %s" % (i, cfg.name))
         i += 1
 
-    i = int(input(""))
+    try:
+        i = int(input(""))
+    except ValueError as e:
+        logging.error(e)
+        sys.exit(1)
 
-    if i >= 0 and i < len(configurations):
-        print("Process is started")
-        cfg = configurations[i]
-        model = ModelManager(cfg)
-        #start_app(cfg)
+    if i >= 0 and i < len(cfg_list):
+        print("Program is started")
+        cfg = cfg_list[i]
+
+        anki = AnkiExporter()
+        model_mngr = ModelManager(cfg, anki)
+
+        keylisten = Keylistener()
+        keylisten.register_observer(model_mngr)
+        for field in model_mngr.get_fields():
+            keylisten.register_observer(field)
+
+        keylisten.start_listening()
     else:
-        print("Wrong value is entered")
+        logging.error("Wrong configuration index is entered: %s" % i)
+        sys.exit(1)
 
 
 if __name__ == '__main__':

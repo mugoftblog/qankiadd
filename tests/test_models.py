@@ -1,5 +1,6 @@
 from models import *
 from config import *
+from tests.stubs.exporting.anki import *
 import win32clipboard
 
 from dataprov.factory import *
@@ -19,8 +20,8 @@ cfg_not_unique = Config("Not unique names",
               FieldCfg("Definition", HOTKEY_QUESTION, "Definition", AddMode.Ignore, AddMode.Append),  #observer name is the same as field name
               FieldCfg("Answer", HOTKEY_ANSWER, "Question", AddMode.Ignore, None),
               FieldCfg("Answer", HOTKEY_ANSWER, "Question", AddMode.Ignore, None),  #field name is the same, as previous field name
-              FieldCfg("Picture", HOTKEY_ANSWER, "Sound", AddMode.Ignore, DataProvType.GoogleTranslate),
-              FieldCfg("Sound", HOTKEY_ANSWER, "Picture", AddMode.Ignore, DataProvType.GoogleTranslate)
+              FieldCfg("Picture", HOTKEY_ANSWER, "Sound", AddMode.Ignore, DataProvType.Googletranslate),
+              FieldCfg("Sound", HOTKEY_ANSWER, "Picture", AddMode.Ignore, DataProvType.Googletranslate)
               ],
              False)
 
@@ -28,7 +29,7 @@ cfg_not_unique = Config("Not unique names",
 def test_models_unique():
     "After Model Manager is created all config names should be unique"
     print("\n    test_models_unique")
-    model_mng = ModelManager(cfg_not_unique)
+    model_mng = ModelManager(cfg_not_unique, AnkiExporterStub())
 
     assert cfg_not_unique.field_cfgs[0].observable_field is not "", "Still wrong observable name %s" % cfg_not_unique.field_cfgs[0].observable_field
 
@@ -62,7 +63,7 @@ def test_models_set_text():
     """Text should be correctly set to the field: all observers should be updated,
     in case text is too long it should be shortened"""
     print("\n    test_models_set_text")
-    model_mng = ModelManager(cfg_set_text)
+    model_mng = ModelManager(cfg_set_text, AnkiExporterStub())
 
     field = model_mng.get_field("Question")
     assert field is not None
@@ -94,7 +95,7 @@ def test_models_set_text():
 ############################################ test GOOGLE TRANSLATOR ###################################################
 cfg_googletrans = Config("Google Translator",
                  [FieldCfg("Question", HOTKEY_QUESTION, None, AddMode.Ignore, None),
-                  FieldCfg("Answer", HOTKEY_ANSWER, "Question", AddMode.Ignore, DataProvType.GoogleTranslate),
+                  FieldCfg("Answer", HOTKEY_ANSWER, "Question", AddMode.Ignore, DataProvType.Googletranslate),
                  ],
                 False)
 
@@ -102,11 +103,11 @@ cfg_googletrans = Config("Google Translator",
 def test_models_googletrans():
     print("\n    test_models_googletrans")
 
-    model_mng = ModelManager(cfg_googletrans)
+    model_mng = ModelManager(cfg_googletrans, AnkiExporterStub())
     field = model_mng.get_field("Question")
     assert field is not None
 
-    factory = get_dataprov_factory(DataProvType.GoogleTranslate)
+    factory = get_dataprov_factory(DataProvType.Googletranslate)
     dataprov = factory.get_data_provider()
 
     assert dataprov is not None
@@ -134,7 +135,7 @@ cfg_clipboard = Config("Clipboard",
 def test_models_clipboard():
     print("\n    test_models_clipboard")
 
-    model_mng = ModelManager(cfg_clipboard)
+    model_mng = ModelManager(cfg_clipboard, AnkiExporterStub())
     field = model_mng.get_field("Question")
     assert field is not None
 

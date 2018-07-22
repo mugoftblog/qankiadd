@@ -1,6 +1,7 @@
 from enum import Enum
 from dataprov.google import *
 from dataprov.clipboard import *
+import logging
 
 """
 This module is an entry point for getting the required data provider.
@@ -25,8 +26,8 @@ class DataProvType(Enum):
     After adding new data provider add new type in this Enum
     """
     Clipboard = 0,  # information should be added from clipboard @TODO selected text
-    GoogleTranslate = 1,  # information will be automatically translated via google translate module
-    GoogleImage = 2,  # information will be automatically found and added via google image module
+    Googletranslate = 1,  # information will be automatically translated via google translate module
+    Googleimage = 2,  # information will be automatically found and added via google image module
 
 
 def get_dataprov_factory(dataprov_type):
@@ -40,9 +41,12 @@ def get_dataprov_factory(dataprov_type):
     if dataprov_type is not None:
         if dataprov_type == DataProvType.Clipboard:
             dataprov_factory = ClibpboardFactory()
-        elif dataprov_type == DataProvType.GoogleTranslate:
+            logging.debug("Dataprovider \"%s \" is returned" % dataprov_type)
+        elif dataprov_type == DataProvType.Googletranslate:
             dataprov_factory = GoogleFactory()
+            logging.debug("Dataprovider \"%s \" is returned" % dataprov_type)
         else:
             dataprov_factory = None
+            logging.warning("Invalid dataprovider: %s" % dataprov_type)
 
     return dataprov_factory
