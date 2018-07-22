@@ -11,19 +11,18 @@ Each configuration contains the list of fields.
 ##################defines######################
 
 class AddMode(Enum):
+    """ this enum describes how the information is added to the field after shortkey press
+    or after trigger execution
+    """
     Ignore = 0,  # ignore - if field is not empty do nothing
     Write = 1,  # write - the field will be rewritten
     Append = 2,  # append = new text will be appended to the field
 
-#this enum describes how the information is added to the field after shortkey press
-#or after trigger execution
-#TODO should be in dataprov_factory file
 
 def print_cfg(cfg):
     for field in cfg.field_cfgs:
         print("FieldCfg(\"%s\", HOTKEY, \"%s\")" % (field.name, field.observable_field))
 
-#  classes start  #
 
 class FieldCfg:
     def __init__(self, name, shortkey=None, observable_field=None, addmode=AddMode.Write, dataprov_type=None):
@@ -46,29 +45,10 @@ class Config:
         """
         :param name: name of the configuration
         :param fields: array with field models
-        :param autosave: TODO ?? what is that
+        :param autosave: TODO ?? what is that - if all fields are full then save in file
         """
         self.name = name
         self.autosave = autosave
          # check if field names are unique. If not - add _1 or _2 at the end. Also update observers
         self.field_cfgs = field_cfgs
 
-
-##################execution code ##################
-
-#TODO: it should be read from file later
-
-#fields hotkeys
-HOTKEY_QUESTION = ("ctrl", "b")
-HOTKEY_ANSWER = ("ctrl", "spacebar")
-
-""" TODO observers are registered as index within array of fields - not so convinient,
- and indexes always change whenever the order of added fields is changed """
-configurations = [
-    Config("Foreign Language",
-           [FieldCfg("Question", HOTKEY_QUESTION,  "Answer",     AddMode.Ignore, None),        # 0
-            FieldCfg("Question", HOTKEY_QUESTION,  None,         AddMode.Ignore, None),
-            FieldCfg("Answer",   HOTKEY_ANSWER,   "Question",    AddMode.Ignore, DataProvType.GoogleTranslate),
-            FieldCfg("Answer",   HOTKEY_ANSWER,   "Question",    AddMode.Ignore, DataProvType.GoogleTranslate)],  # 1
-           False)
-]

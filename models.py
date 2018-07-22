@@ -3,6 +3,10 @@ from dataprov.factory import *
 from keylistener import *
 
 
+KEY_SAVE = 's'
+KEY_SAVE_TUPLE_STR = ('ctrl', KEY_SAVE)
+
+
 class FieldModel(KeylistenerObserver):
     TEXT_LEN_MAX = 3000
 
@@ -23,9 +27,10 @@ class FieldModel(KeylistenerObserver):
     # def set_id(self, id):
     #     self._id = id
 
-    def key_pressed(self, key):
-        print("KeyPressed %s %s" % (key[0], key[1]))
-        pass
+    def key_pressed(self, key_tuple_str):
+        if key_tuple_str == self._key_tuple:
+            # just get text from the data provider
+            self.set_text("")
 
     def set_text(self, text):
         text_set = text
@@ -60,12 +65,13 @@ class FieldModel(KeylistenerObserver):
         return self.TEXT_LEN_MAX
 
 
-class ModelManager:
+class ModelManager(KeylistenerObserver):
     "IDs are indexes within the list"
     def __init__(self, cfg):
         """
         :param cfg: configuration
         """
+        KeylistenerObserver.__init__(self, KEY_SAVE_TUPLE_STR)
         self._cfg = cfg
         self._fields = {}
 
@@ -99,7 +105,6 @@ class ModelManager:
                 observ.observable_field = None
 
             #add observer to the observable field
-
 
     def _set_id(self, m):
         raise NotImplementedError
@@ -137,9 +142,12 @@ class ModelManager:
         # mark registry changed, but don't bump mod time
         self.save()
 
+    def key_pressed(self, key_tuple_str):
+        if key_tuple_str == self._key_tuple:
+            self.save_all()
+
     def save_all(self):
         raise NotImplementedError
-        "Save fields"
 
     def contains_id(self, id):
         return str(id) in self.models

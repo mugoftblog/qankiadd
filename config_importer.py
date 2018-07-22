@@ -5,8 +5,8 @@ import xml.etree.ElementTree as ET
 ELEM_ROOT = 'Root'
 ELEM_CONFIG = 'Configuration'
 ELEM_FIELD = 'Field'
-ELEM_KEY1 = 'Key1'
-ELEM_KEY2 = 'Key2'
+ELEM_MOD = 'Mod'
+ELEM_KEY = 'Key'
 ELEM_OBSERVABLE_FIELD = "ObservableField"
 ELEM_DATA_PROVIDER = "DataProvider"
 ATTR_ADDMODE = 'addmode'
@@ -63,12 +63,12 @@ class ConfigImproter:
 
                         # try to find key1 and key2
                         key1_str = ""
-                        key_elem = Field.find(ELEM_KEY1)
+                        key_elem = Field.find(ELEM_MOD)
                         if key_elem is not None:
                             key1_str = key_elem.text
 
                         key2_str = ""
-                        key_elem = Field.find(ELEM_KEY2)
+                        key_elem = Field.find(ELEM_KEY)
                         if key_elem is not None:
                             key2_str = key_elem.text
 
@@ -115,9 +115,9 @@ class ConfigImproter:
 
                 if field._shortkey is not None:
                     if (field._shortkey[0] != '') and (field._shortkey[0] != ''): #TODO? if at least one availble write?
-                        Key1 = ET.SubElement(Field, ELEM_KEY1)
+                        Key1 = ET.SubElement(Field, ELEM_MOD)
                         Key1.text = field._shortkey[0]
-                        Key2 = ET.SubElement(Field, ELEM_KEY2)
+                        Key2 = ET.SubElement(Field, ELEM_KEY)
                         Key2.text = field._shortkey[1]
 
                 if field.dataprov_type is not None:

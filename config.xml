@@ -2,8 +2,8 @@
 <Root>
     <Configuration name="Foreign Language">
         <Field name="Question" addmode="Ignore">
-            <Key1>Ctrl</Key1>
-            <Key2>B</Key2>
+            <Mod>Ctrl</Mod>
+            <Key>B</Key>
         </Field>
         <Field name="Answer" addmode="Write">
             <ObservableField>Question</ObservableField>

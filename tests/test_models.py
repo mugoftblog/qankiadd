@@ -13,6 +13,7 @@ text_test_normal = "Test"
 text_test_special_chars = "Ein Beiespiel: königsee ärzte übersetzer"
 
 
+############################################ test UNIQUE ##############################################################
 cfg_not_unique = Config("Not unique names",
              [FieldCfg("Question", HOTKEY_QUESTION, "WrongName", AddMode.Ignore, None), # observer with specified name doesn't exit
               FieldCfg("Definition", HOTKEY_QUESTION, "Definition", AddMode.Ignore, AddMode.Append),  #observer name is the same as field name
@@ -22,25 +23,6 @@ cfg_not_unique = Config("Not unique names",
               FieldCfg("Sound", HOTKEY_ANSWER, "Picture", AddMode.Ignore, DataProvType.GoogleTranslate)
               ],
              False)
-
-cfg_set_text = Config("Not unique names",
-                 [FieldCfg("Question", HOTKEY_QUESTION, None, AddMode.Ignore, None),
-                  FieldCfg("Answer", HOTKEY_ANSWER, "Question", AddMode.Ignore, None),
-                  FieldCfg("Answer2", HOTKEY_ANSWER, "Question", AddMode.Ignore, None),
-                 ],
-                False)
-
-cfg_googletrans = Config("Google Translator",
-                 [FieldCfg("Question", HOTKEY_QUESTION, None, AddMode.Ignore, None),
-                  FieldCfg("Answer", HOTKEY_ANSWER, "Question", AddMode.Ignore, DataProvType.GoogleTranslate),
-                 ],
-                False)
-
-cfg_clipboard = Config("Clipboard",
-                 [FieldCfg("Question", HOTKEY_QUESTION, None, AddMode.Ignore, None),
-                  FieldCfg("Answer", HOTKEY_ANSWER, "Question", AddMode.Ignore, DataProvType.Clipboard),
-                 ],
-                False)
 
 
 def test_models_unique():
@@ -65,6 +47,15 @@ def test_models_unique():
     assert cfg_not_unique.field_cfgs[5].observable_field == "", "Observable name should be reseted. otherwise recursion (both fields add each other as observers)"
 
     print_cfg(cfg_not_unique)
+
+
+############################################ test SET TEXT ############################################################
+cfg_set_text = Config("Not unique names",
+                 [FieldCfg("Question", HOTKEY_QUESTION, None, AddMode.Ignore, None),
+                  FieldCfg("Answer", HOTKEY_ANSWER, "Question", AddMode.Ignore, None),
+                  FieldCfg("Answer2", HOTKEY_ANSWER, "Question", AddMode.Ignore, None),
+                 ],
+                False)
 
 
 def test_models_set_text():
@@ -100,6 +91,14 @@ def test_models_set_text():
     assert observable_field.get_text() == observer_field.get_text()
 
 
+############################################ test GOOGLE TRANSLATOR ###################################################
+cfg_googletrans = Config("Google Translator",
+                 [FieldCfg("Question", HOTKEY_QUESTION, None, AddMode.Ignore, None),
+                  FieldCfg("Answer", HOTKEY_ANSWER, "Question", AddMode.Ignore, DataProvType.GoogleTranslate),
+                 ],
+                False)
+
+
 def test_models_googletrans():
     print("\n    test_models_googletrans")
 
@@ -122,6 +121,14 @@ def test_models_googletrans():
 
     assert text == field.get_text(), "text returned by the field has to be equal to the text returned by the dataprovider \
                                        as internally this field has to use the same dataprovider"
+
+
+############################################ test CLIPBOARD ###########################################################
+cfg_clipboard = Config("Clipboard",
+                 [FieldCfg("Question", HOTKEY_QUESTION, None, AddMode.Ignore, None),
+                  FieldCfg("Answer", HOTKEY_ANSWER, "Question", AddMode.Ignore, DataProvType.Clipboard),
+                 ],
+                False)
 
 
 def test_models_clipboard():
@@ -174,6 +181,7 @@ def test_models_clipboard():
     assert text_clipboard == text, "incorrect handling of the long text by clipboard data provider"
 
 
+############################################ TESTS EXECUTION ##########################################################
 test_models_unique()
 test_models_set_text()
 test_models_googletrans()

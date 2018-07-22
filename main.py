@@ -15,19 +15,14 @@ from gui import *
 from keylistener import *
 from models import *
 
-
-
 # TODO more elegant way to have singleton of the Application
-gui_obj = None
-keylstnr_obj = None
+keylstnr = None
 
 def start_app(cfg):
-    global gui_obj
-    gui_obj = Gui(cfg)
-    global keylstnr_obj
-    keylstnr_obj = Keylistener(gui_obj)
-    keylstnr_obj.register_keys()
-    keylstnr_obj.start_listening()
+    global keylstnr
+    keylstnr = Keylistener()
+    #keylstnr.register_keys()
+    #keylstnr.start_listening()
 
 
 """def ensure_config_file(config_dir: str) -> str:
@@ -50,8 +45,7 @@ def main():
         print("%u. %s" % (i, cfg.name))
         i += 1
 
-    # i = int(input(""))
-    i = 0
+    i = int(input(""))
 
     if i >= 0 and i < len(configurations):
         print("Process is started")

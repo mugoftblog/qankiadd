@@ -180,9 +180,11 @@ def test_exporting_write_many_lines():
 
     # assume that size of the symbols for anki format is not bigger than 100 byte
     symbols_format_size = 100
-    assert statinfo.st_size < anki._size_max + text_fields_size + symbols_format_size, "size of the first file should be less than max allowed size + size of the last written line"
+    assert statinfo.st_size < anki._size_max + text_fields_size + symbols_format_size, \
+        "size of the first file should be less than max allowed size + size of the last written line"
 
 
+############################################ TESTS EXECUTION ##########################################################
 test_exporting_dir_dontexist()
 test_exporting_write()
 test_exporting_file_cantbe_closed()

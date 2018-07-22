@@ -2,8 +2,8 @@
 <Root>
     <Configuration name="Foreign Language">
         <Field name="Question" addmode="IgNore">
-            <Key1>Ctrl</Key1>
-            <Key2>B</Key2>
+            <Mod>Ctrl</Mod>
+            <Key>B</Key>
             <DataProvider>Clipboard</DataProvider>
         </Field>
         <Field name="Answer" addmode="WRite">
