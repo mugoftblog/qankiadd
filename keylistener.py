@@ -176,14 +176,14 @@ KEY_QUIT_TUPLE_STR = ('ctrl', KEY_QUIT)
 
 
 class KeylistenerObserver:
-    def __init__(self, key_tuple):
-        self._key_tuple = key_tuple
+    def __init__(self, shortkeys):
+        self._shortkeys = shortkeys
 
-    def key_pressed(self, key_tuple):
+    def key_pressed(self, shortkey):
         raise NotImplementedError('subclasses must override NotifyKeyPressed(id)!')
 
-    def get_key(self):
-        return self._key_tuple
+    def get_keys(self):
+        return self._shortkeys
 
 
 class Keylistener:
@@ -228,10 +228,10 @@ class Keylistener:
 
     def register_observer(self, observer):
         if issubclass(type(observer), KeylistenerObserver):
-            key_tuple_str = observer.get_key()
-            if key_tuple_str != KEY_QUIT_TUPLE_STR:
-                if self._register_key(key_tuple_str):
-                    self._observers.append(observer)
+            for key in observer.get_keys():
+                if key != KEY_QUIT_TUPLE_STR:
+                    if self._register_key(key):
+                        self._observers.append(observer)
         else:
             logging.error("KeylistenerObserver is expected")
             sys.exit(1)
@@ -264,5 +264,7 @@ class Keylistener:
 
         finally:
             for observer in self._observers:
-                self._unregister_key(observer.get_key())
+                # unregister each key of each observer
+                for key in observer.get_keys():
+                    self._unregister_key(key)
             self._unregister_key(KEY_QUIT_TUPLE_STR)

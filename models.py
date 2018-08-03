@@ -4,8 +4,8 @@ from keylistener import *
 from exporting.base import *
 
 
-KEY_SAVE = 's'
-KEY_SAVE_TUPLE_STR = ('ctrl', KEY_SAVE)
+KEY_SAVE_ALL_DEFAULT = 's'
+SHORTKEY_SAVE_ALL_DEFAULT = ('ctrl', KEY_SAVE_ALL_DEFAULT)
 
 
 class FieldModel(KeylistenerObserver):
@@ -16,7 +16,7 @@ class FieldModel(KeylistenerObserver):
         :param field_cfg: field configuration
         """
         self.cfg = field_cfg
-        KeylistenerObserver.__init__(self, self.cfg._shortkey)
+        KeylistenerObserver.__init__(self, [self.cfg._shortkey])
         self.observers = []
         self._text = ""
         self._dataprov = None
@@ -71,7 +71,7 @@ class ModelManager(KeylistenerObserver):
         """
         :param cfg: configuration
         """
-        KeylistenerObserver.__init__(self, KEY_SAVE_TUPLE_STR)
+        KeylistenerObserver.__init__(self, [SHORTKEY_SAVE_ALL_DEFAULT])
         self._exporter = exporter
         self._cfg = cfg
         self._fields = {}

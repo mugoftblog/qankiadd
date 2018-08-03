@@ -1,12 +1,27 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <Root>
+  <SaveAll>
+    <Modifier>ctrl</Modifier>
+    <Modifier>shift</Modifier>
+    <Key>s</Key>
+  </SaveAll>
+  <ClearAll>
+    <Modifier>ctrl</Modifier>
+    <Modifier>shift</Modifier>
+    <Key>l</Key>
+  </ClearAll>
+  <Quit>
+    <Modifier>ctrl</Modifier>
+    <Modifier>shift</Modifier>
+    <Key>l</Key>
+  </Quit>
   <Configuration name="Foreign Language">
-    <Field addmode="Ignore" name="ChangedName 0">
-      <Mod>ctrl</Mod>
-      <Key>b</Key>
+    <Field addmode="Ignore" name="ChangedName 0" required="True">
+      <Modifier>ctrl</Modifier>
+      <Key>q</Key>
       <DataProvider>Clipboard</DataProvider>
     </Field>
-    <Field addmode="Write" name="ChangedName 1">
+    <Field addmode="Write" name="ChangedName 1" required="True">
       <ObservableField>Question</ObservableField>
       <DataProvider>Googletranslate</DataProvider>
     </Field>

@@ -25,7 +25,7 @@ def print_cfg(cfg):
 
 
 class FieldCfg:
-    def __init__(self, name, shortkey=None, observable_field=None, addmode=AddMode.Write, dataprov_type=None):
+    def __init__(self, name, shortkey=None, observable_field=None, addmode=AddMode.Write, required=False, dataprov_type=None):
         """
         :param name:
         :param shortkey:
@@ -37,6 +37,7 @@ class FieldCfg:
         self._shortkey = shortkey
         self.observable_field = observable_field
         self._addmode = addmode
+        self._required = required
         self.dataprov_type = dataprov_type
 
 

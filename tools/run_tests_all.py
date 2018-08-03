@@ -15,9 +15,9 @@ def register_stubs():
 
 register_stubs()
 
-from tests.test_models import *
+#from tests.test_models import *
 from tests.test_config import *
-from tests.test_exporting import *
-from tests.test_keylistener import *
+#from tests.test_exporting import *
+#from tests.test_keylistener import *
 
 
