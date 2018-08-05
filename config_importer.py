@@ -21,9 +21,9 @@ ELEM_QUIT = 'Quit'
 class ConfigImproter:
     def __init__(self, path):
         self._path = path
-        self._shortkey_saveall = [(),""]
-        self._shortkey_clearall = [(),""]
-        self._shortkey_quit = [(),""]
+        self._shortkey_saveall = None
+        self._shortkey_clearall = None
+        self._shortkey_quit = None
         self.cfg_list = []
 
     def __pretty_write(self, elem, level=0):
@@ -42,6 +42,41 @@ class ConfigImproter:
             if level and (not elem.tail or not elem.tail.strip()):
                 elem.tail = i
 
+    def _read_shortkey_from_elem(self, elem):
+        shortkey = None
+        mod_tuple = ()
+        mod_str = ""
+        for mod_elem in elem.findall(ELEM_MODIFIER):
+            mod_str = mod_elem.text.lower()
+            if (mod_str != "") and (mod_str not in mod_tuple):
+                mod_tuple = mod_tuple + (mod_str,)
+
+        key_str = ""
+        key_elem = elem.find(ELEM_KEY)
+        if key_elem is not None:
+            key_str = key_elem.text.lower()
+
+        if mod_tuple and key_str:
+            shortkey = [mod_tuple, key_str]
+
+        return shortkey
+
+    def _read_shortkey(self, elem_parent, elem_name):
+        elem_sub = elem_parent.find(elem_name)
+        if elem_sub is not None:
+            return self._read_shortkey_from_elem(elem_sub)
+
+    def _write_shortkey(self, elem_parent, elem_name, shortkey):
+        if shortkey is not None:
+            if (shortkey[0]) and (shortkey[1]):
+                elem_sub = ET.SubElement(elem_parent, elem_name)
+                for mod in shortkey[0]:
+                    Modifier = ET.SubElement(elem_sub, ELEM_MODIFIER)
+                    Modifier.text = mod
+
+                Key = ET.SubElement(elem_sub, ELEM_KEY)
+                Key.text = shortkey[1]
+
     def read(self):
         if self._path != "":
             try:
@@ -49,64 +84,13 @@ class ConfigImproter:
                 root = tree.getroot()
 
                 # read shortkey for saving all fields into the file (if exists)
-                SaveAll = root.find(ELEM_SAVEALL)
-
-                if SaveAll is not None:
-                    mod_tuple = ()
-                    mod_str = ""
-                    for mod_elem in SaveAll.findall(ELEM_MODIFIER):
-                        mod_str = mod_elem.text.lower()
-                        if (mod_str != "") and (mod_str not in mod_tuple):
-                            mod_tuple = mod_tuple + (mod_str,)
-
-                    self._shortkey_saveall[0] = mod_tuple
-
-                    key_str = ""
-                    key_elem = SaveAll.find(ELEM_KEY)
-                    if key_elem is not None:
-                        key_str = key_elem.text.lower()
-
-                    self._shortkey_saveall[1] = key_str
+                self._shortkey_saveall = self._read_shortkey(root, ELEM_SAVEALL)
 
                 # read shortkey for clearing all fields (if exists)
-                ClearAll = root.find(ELEM_CLEARALL)
-
-                if ClearAll is not None:
-                    mod_tuple = ()
-                    mod_str = ""
-                    for mod_elem in ClearAll.findall(ELEM_MODIFIER):
-                        mod_str = mod_elem.text.lower()
-                        if (mod_str != "") and (mod_str not in mod_tuple):
-                            mod_tuple = mod_tuple + (mod_str,)
-
-                    self._shortkey_clearall[0] = mod_tuple
-
-                    key_str = ""
-                    key_elem = ClearAll.find(ELEM_KEY)
-                    if key_elem is not None:
-                        key_str = key_elem.text.lower()
-
-                    self._shortkey_clearall[1] = key_str
+                self._shortkey_clearall = self._read_shortkey(root, ELEM_CLEARALL)
 
                 # read shortkey for quiting the app (if exists)
-                Quit = root.find(ELEM_CLEARALL)
-
-                if Quit is not None:
-                    mod_tuple = ()
-                    mod_str = ""
-                    for mod_elem in Quit.findall(ELEM_MODIFIER):
-                        mod_str = mod_elem.text.lower()
-                        if (mod_str != "") and (mod_str not in mod_tuple):
-                            mod_tuple = mod_tuple + (mod_str,)
-
-                    self._shortkey_quit[0] = mod_tuple
-
-                    key_str = ""
-                    key_elem = Quit.find(ELEM_KEY)
-                    if key_elem is not None:
-                        key_str = key_elem.text.lower()
-
-                    self._shortkey_quit[1] = key_str
+                self._shortkey_quit = self._read_shortkey(root, ELEM_QUIT)
 
                 # read all configurations
                 for Configuration in root.findall(ELEM_CONFIG):
@@ -139,17 +123,8 @@ class ConfigImproter:
                             field_cfg._required = False
 
                         # try to read field shortkey (if exists)
-                        mod_str = ""
-                        mod_elem = Field.find(ELEM_MODIFIER)
-                        if mod_elem is not None:
-                            mod_str = mod_elem.text.lower()
-
-                        key_str = ""
-                        key_elem = Field.find(ELEM_KEY)
-                        if key_elem is not None:
-                            key_str = key_elem.text.lower()
-
-                        field_cfg._shortkey = (mod_str, key_str)
+                        field_cfg._shortkey = self._read_shortkey_from_elem(Field)
+                        print(field_cfg._shortkey)
 
                         # try to read obervable name (if exists)
                         obervable_elem = Field.find(ELEM_OBSERVABLE_FIELD)
@@ -179,34 +154,13 @@ class ConfigImproter:
         root = ET.Element(ELEM_ROOT)
 
         # write shortkey for saving all fields (if exists)
-        if (self._shortkey_saveall[0]) and (self._shortkey_saveall[1]):
-            SaveAll = ET.SubElement(root, ELEM_SAVEALL)
-            for mod in self._shortkey_saveall[0]:
-                Modifier = ET.SubElement(SaveAll, ELEM_MODIFIER)
-                Modifier.text = mod
-
-            Key = ET.SubElement(SaveAll, ELEM_KEY)
-            Key.text = self._shortkey_saveall[1]
+        self._write_shortkey(root, ELEM_SAVEALL, self._shortkey_saveall)
 
         # write shortkey for clearing all fields (if exists)
-        if (self._shortkey_clearall[0]) and (self._shortkey_clearall[1]):
-            ClearAll = ET.SubElement(root, ELEM_CLEARALL)
-            for mod in self._shortkey_clearall[0]:
-                Modifier = ET.SubElement(ClearAll, ELEM_MODIFIER)
-                Modifier.text = mod
-
-            Key = ET.SubElement(ClearAll, ELEM_KEY)
-            Key.text = self._shortkey_clearall[1]
+        self._write_shortkey(root, ELEM_CLEARALL, self._shortkey_clearall)
 
         # write shortkey for quiting the app (if exists)
-        if (self._shortkey_quit[0]) and (self._shortkey_quit[1]):
-            Quit = ET.SubElement(root, ELEM_QUIT)
-            for mod in self._shortkey_quit[0]:
-                Modifier = ET.SubElement(Quit, ELEM_MODIFIER)
-                Modifier.text = mod
-
-            Key = ET.SubElement(Quit, ELEM_KEY)
-            Key.text = self._shortkey_quit[1]
+        self._write_shortkey(root, ELEM_QUIT, self._shortkey_quit)
 
         # write all configurations
         for cfg in self.cfg_list:
@@ -224,11 +178,12 @@ class ConfigImproter:
                     ObservableField.text = field.observable_field
 
                 if field._shortkey is not None:
-                    if (field._shortkey[0] != '') and (field._shortkey[0] != ''): #TODO? if at least one availble write?
+                    for mod in field._shortkey[0]:
                         Modifier = ET.SubElement(Field, ELEM_MODIFIER)
-                        Modifier.text = field._shortkey[0]
-                        Key = ET.SubElement(Field, ELEM_KEY)
-                        Key.text = field._shortkey[1]
+                        Modifier.text = mod
+
+                    Key = ET.SubElement(Field, ELEM_KEY)
+                    Key.text = field._shortkey[1]
 
                 if field.dataprov_type is not None:
                     DataProvider = ET.SubElement(Field, ELEM_DATA_PROVIDER)

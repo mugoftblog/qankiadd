@@ -13,7 +13,7 @@
   <Quit>
     <Modifier>ctrl</Modifier>
     <Modifier>shift</Modifier>
-    <Key>l</Key>
+    <Key>q</Key>
   </Quit>
   <Configuration name="Foreign Language">
     <Field addmode="Ignore" name="ChangedName 0" required="True">

@@ -15,6 +15,7 @@ NAME_TO_MOD_TABLE = {
     'win': win32con.MOD_WIN,
 }
 
+MOD_INVALID = 0x0000
 MOD_TO_NAME_TABLE = {}
 for name, mod in NAME_TO_MOD_TABLE.items():
     MOD_TO_NAME_TABLE[mod] = name
@@ -171,13 +172,27 @@ VK_TO_NAME_TABLE = {}
 for name, vk in NAME_TO_VK_TABLE.items():
     VK_TO_NAME_TABLE[vk] = name
 
-KEY_QUIT = 'q'
-KEY_QUIT_TUPLE_STR = ('ctrl', KEY_QUIT)
+
+KEY_QUIT_CODES_DEFAULT = (NAME_TO_MOD_TABLE['ctrl'] | NAME_TO_MOD_TABLE['shift'], NAME_TO_VK_TABLE['q'])
 
 
 class KeylistenerObserver:
     def __init__(self, shortkeys):
-        self._shortkeys = shortkeys
+        self._shortkeys = []
+        if shortkeys is not None:
+            if isinstance(shortkeys, list):
+                for shortkey in shortkeys:
+                    do_raise = False
+                    if shortkey is not None:
+                        if do_raise:
+                            raise ValueError("wrong format of the input parameter")
+                            break
+                        if len(shortkey) == 2:
+                            if isinstance(shortkey[0], tuple) and shortkey[0] and isinstance(shortkey[1], str) and shortkey[1]:
+                                self._shortkeys.append(shortkey)
+                    else:
+                        # if at least one of the shortkeys in the list is None raise the error
+                        do_raise = True
 
     def key_pressed(self, shortkey):
         raise NotImplementedError('subclasses must override NotifyKeyPressed(id)!')
@@ -198,73 +213,108 @@ class Keylistener:
         self._observers = []
         self._key_ids = {}
         self._key_id_last = 0
+        self._key_code_quit = KEY_QUIT_CODES_DEFAULT
+
+    def _store_regitered_key(self, modifier_code, key_code):
+        pass
+        #lparam = (key_code << 16 & 0xFFFF)  | modifier_code &
+
+        #self._key_ids[lparam] = self._key_id_last
+        #self._key_id_last += 1
 
     def _unregister_key(self, key_tuple):
-        key_id = self._key_ids.get(key_tuple, None)
-        if key_id is not None:
-            logging.debug("Unregistering key (\'%s\', \'%s\')" % (key_tuple[0], key_tuple[1]))
-            if not windll.user32.UnregisterHotKey(None, key_id):
-                logging.warning("Unable to unregister key with id=%u" % key_id)
-            else:
-                del self._key_ids[key_tuple]
-                logging.debug("Unregistering OK")
+        pass
+        # key_id = self._key_ids.get(key_tuple, None)
+        # if key_id is not None:
+        #     logging.debug("Unregistering key (\'%s\', \'%s\')" % (key_tuple[0], key_tuple[1]))
+        #     if not windll.user32.UnregisterHotKey(None, key_id):
+        #         logging.warning("Unable to unregister key with id=%u" % key_id)
+        #     else:
+        #         del self._key_ids[key_tuple]
+        #         logging.debug("Unregistering OK")
 
-    def _register_key(self, key_tuple):
+    def _register_key_by_code(self, modifier_code, key_code):
+        print("_register_key_by_code", modifier_code, " ", key_code)
         ret = False
-        if (key_tuple is not None) and (len(key_tuple) == 2):
-            if (key_tuple[0] != "" and key_tuple[1] != "") and key_tuple[0] != key_tuple[1]:
-                modifier = NAME_TO_MOD_TABLE.get(key_tuple[0], None)
-                vk = NAME_TO_VK_TABLE.get(key_tuple[1], None)
-                if (modifier is not None) and (vk is not None):
-                    logging.info("Registering key (\'%s\', \'%s\')" % (modifier, vk))
-                    if not windll.user32.RegisterHotKey(None, self._key_id_last, modifier, vk):
-                        logging.warning("Unable to register key")
-                    else:
-                        self._key_ids[key_tuple] = self._key_id_last
-                        self._key_id_last += 1
-                        ret = True
-                        logging.debug("Registering OK")
+        if (modifier_code != MOD_INVALID) and (key_code is not None):
+            is_key_registered = False
+
+            #TODO check if it is already registered or not
+
+            if not is_key_registered:
+                logging.info("Registering shortkey (\'%u\', \'%u\')" % (modifier_code, key_code))
+                if not windll.user32.RegisterHotKey(None, self._key_id_last, modifier_code, key_code):
+                    logging.warning("Unable to register the shortkey")
+                else:
+                    self._store_regitered_key(modifier_code, key_code)
+                    ret = True
+                    logging.debug("Registering OK")
+            else:
+                # in case shortkey is already registered do nothing but just return True
+                ret = True
         return ret
+
+    def _register_key(self, shortkey):
+        print("_register_key %s", shortkey)
+
+        mod_code = MOD_INVALID
+        for mod_name in shortkey[0]:
+            mod_code_tmp = NAME_TO_MOD_TABLE.get(mod_name, None)
+
+            if mod_code_tmp is not None:
+                mod_code |= mod_code_tmp
+            else:
+                logging.warning("Can't resolve modifier name %s" % mod_name)
+                mod_code = MOD_INVALID
+                break;
+
+        key_code = NAME_TO_VK_TABLE.get(shortkey[1], None)
+
+        return self._register_key_by_code(mod_code, key_code)
 
     def register_observer(self, observer):
         if issubclass(type(observer), KeylistenerObserver):
             for key in observer.get_keys():
-                if key != KEY_QUIT_TUPLE_STR:
-                    if self._register_key(key):
-                        self._observers.append(observer)
+                if self._register_key(key):
+                    self._observers.append(observer)
         else:
             logging.error("KeylistenerObserver is expected")
             sys.exit(1)
 
-
     def start_listening(self):
         """ Start key press monitoring - in case key is pressed, take the action """
         logging.debug("Key listening is STARTED")
-        self._register_key(KEY_QUIT_TUPLE_STR)
+        self._register_key_by_code(self._key_code_quit[0], self._key_code_quit[1])
         try:
             msg = wintypes.MSG()
             while windll.user32.GetMessageA(byref(msg), None, 0, 0) != 0:
                 if msg.message == win32con.WM_HOTKEY:
                     # action_id = msg.wParam
-                    keycode = (msg.lParam >> 16) & 0xFFFF
-                    modifier = msg.lParam & 0xFFFF
-                    logging.debug("Keypressed (%s, %s)" % (modifier, keycode))
+                    key_code = (msg.lParam >> 16) & 0xFFFF
+                    mod_codes = msg.lParam & 0xFFFF
+                    logging.debug("Keypressed (%s, %s)" % (mod_codes, key_code))
 
-                    if keycode == NAME_TO_VK_TABLE[KEY_QUIT] and modifier == win32con.MOD_CONTROL:
+                    # notify observers about pressed shortkey
+                    mod_tuple = ()
+                    for mod_name, mod_code in NAME_TO_MOD_TABLE.items():
+                        if (mod_code & mod_codes) != 0:
+                            mod_tuple += (mod_name,)
+
+                    key = VK_TO_NAME_TABLE.get(key_code, None)
+
+                    if mod_tuple and key is not None:
+                        shortkey = [mod_tuple, key]
+                        for observer in self._observers:
+                            observer.key_pressed(shortkey)
+
+                    if mod_codes == self._key_code_quit[0] and key_code == self._key_code_quit[1]:
                         logging.debug("Key listening STOPPED")
                         break
-                    else:
-                        # notify observers about pressed key
-                        key_tuple = (MOD_TO_NAME_TABLE[modifier], VK_TO_NAME_TABLE[keycode])
-                        for observer in self._observers:
-                            observer.key_pressed(key_tuple)
 
                     windll.user32.TranslateMessage(byref(msg))
                     windll.user32.DispatchMessageA(byref(msg))
 
         finally:
-            for observer in self._observers:
-                # unregister each key of each observer
-                for key in observer.get_keys():
-                    self._unregister_key(key)
-            self._unregister_key(KEY_QUIT_TUPLE_STR)
+            pass
+            # TODO unregister all keys from the stored list
+            #self._unregister_key(self._key_code_quit)

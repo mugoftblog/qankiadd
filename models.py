@@ -4,9 +4,15 @@ from keylistener import *
 from exporting.base import *
 
 
-KEY_SAVE_ALL_DEFAULT = 's'
-SHORTKEY_SAVE_ALL_DEFAULT = ('ctrl', KEY_SAVE_ALL_DEFAULT)
+SHORTKEY_SAVE_ALL_DEFAULT = [('ctrl', 'shift'), 's']
+SHORTKEY_CLEAR_ALL_DEFAULT = [('ctrl', 'shift'), 'l']
 
+
+def compare_shortkeys(shortkey_expect, shortkey):
+    ret = False
+    if(shortkey_expect[0] == shortkey[0]) and (shortkey[1] == shortkey[1]):
+        ret = True
+    return ret
 
 class FieldModel(KeylistenerObserver):
     TEXT_LEN_MAX = 3000
@@ -25,9 +31,9 @@ class FieldModel(KeylistenerObserver):
     def set_dataprov(self, dataprov):
         self._dataprov = dataprov
 
-    def key_pressed(self, key_tuple_str):
-        if key_tuple_str == self._key_tuple:
-            logging.debug("Key is pressed (%s, %s)" % (key_tuple_str[0], key_tuple_str[1]))
+    def key_pressed(self, shortkey):
+        if compare_shortkeys(self.cfg._shortkey, shortkey):
+            logging.debug("Key is pressed (%s, %s)" % (shortkey[0], shortkey[1]))
             # just get text from the data provider
             self.set_text("")
 
@@ -130,9 +136,9 @@ class ModelManager(KeylistenerObserver):
     #     self._ensure_name_unique(m)
     #     self.models[str(m['id'])] = m
 
-    def key_pressed(self, key_tuple_str):
-        if key_tuple_str == self._key_tuple:
-            logging.debug("Key is pressed (%s, %s)" % (key_tuple_str[0], key_tuple_str[1]))
+    def key_pressed(self, shortkey):
+        if compare_shortkeys(SHORTKEY_SAVE_ALL_DEFAULT, shortkey):
+            logging.debug("Key is pressed (%s, %s)" % (shortkey[0], shortkey[1]))
             self.save_all()
 
     def save_all(self):
