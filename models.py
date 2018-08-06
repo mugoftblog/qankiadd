@@ -9,10 +9,31 @@ SHORTKEY_CLEAR_ALL_DEFAULT = [('ctrl', 'shift'), 'l']
 
 
 def compare_shortkeys(shortkey_expect, shortkey):
-    ret = False
-    if(shortkey_expect[0] == shortkey[0]) and (shortkey[1] == shortkey[1]):
-        ret = True
+    """
+    Compares two shortkeys
+
+    :param shortkey_expect: first shortkey to compare
+    :param shortkey: second shortkey to compare
+    :return: True if the shortkeys the same False in case the shortkeys differ
+    """
+    ret = True
+
+    if len(shortkey[0]) != len(shortkey_expect[0]):
+        # if tuple length differ from the expected tuple length
+        ret = False
+    else:
+        for modifier in shortkey[0]:
+            if modifier not in shortkey_expect[0]:
+                # if at least one of the modifiers not in the expected tuple
+                ret = False
+
+    if ret:
+        if shortkey[1] != shortkey_expect[1]:
+            # if keyboard key is not the same as expected
+            ret = False
+
     return ret
+
 
 class FieldModel(KeylistenerObserver):
     TEXT_LEN_MAX = 3000
@@ -137,13 +158,32 @@ class ModelManager(KeylistenerObserver):
     #     self.models[str(m['id'])] = m
 
     def key_pressed(self, shortkey):
+        print("AAAAA ",shortkey)
         if compare_shortkeys(SHORTKEY_SAVE_ALL_DEFAULT, shortkey):
             logging.debug("Key is pressed (%s, %s)" % (shortkey[0], shortkey[1]))
             self.save_all()
 
     def save_all(self):
-        logging.debug("Saving all fields")
-        self._exporter.write(self.get_fields())
+        """
+        Export field models if all required conditions are met
+
+        :return:
+        """
+        logging.debug("save_all")
+        fields = self.get_fields()
+
+        fields_empty = []
+        # check if all required fields are not empty
+        for field in fields:
+            if field.cfg._required:
+                if not field.get_text():
+                    fields_empty.append((field.cfg.name))
+
+        if len(fields_empty) == 0:
+            # export field models
+            self._exporter.write(fields)
+        else:
+            logging.info("can't export: required fields %s are still empty" % fields_empty)
 
     # def contains_id(self, id):
     #     return str(id) in self.models

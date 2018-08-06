@@ -19,7 +19,7 @@
         <Field name="Question" addmode="Ignore" required="True">
             <Modifier>ctrl</Modifier>
             <Modifier>alt</Modifier>
-            <Key>a</Key>
+            <Key>f</Key>
             <DataProvider>CLipboard</DataProvider>
         </Field>
         <Field name="Answer" addmode="Write" required="True">
