@@ -1,16 +1,18 @@
 from exporting.base import *
 
-
 """
-The calsses and methods of the anki exporter
+The calsses and methods of the anki exporter.
 
-Anki exporter allows to save fields with questions, answers and other fields into anki compatable format.
+Anki exporter allows to save field's data into anki compatable format.
 """
 
 
-class AnkiExporter(FileExporter):
+class AnkiExporter(TextFileExporter):
     def __init__(self):
-        FileExporter.__init__(self)
+        """
+        The calss which writes field's data into the file which later can be imported into the Anki.
+        """
+        TextFileExporter.__init__(self)
         self.filename = "anki"
         self.extension = "txt"
         self.check_update_path()

@@ -15,7 +15,10 @@ from config_importer import *
 from exporting.anki import *
 from keylistener import *
 from models import *
+from console import *
 
+# Prepare logger format and its basic configuration
+# TODO have to check if working correctly
 LOG_FORMAT = "[%(asctime)s  - %(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
 logging.basicConfig(filename='debug.log', format=LOG_FORMAT, level=logging.DEBUG)
 logging.getLogger().addHandler(logging.StreamHandler())
@@ -24,25 +27,25 @@ logging.getLogger().addHandler(logging.StreamHandler())
 # logging.basicConfig(filename='qankiadd.log', level=logging.WARNING)
 
 CONFIG_PATH_IN = "config.xml"
-
-# TODO more elegant way to have singleton of the Application
-keylstnr = None
-
-def start_app(cfg):
-    global keylstnr
-    keylstnr = Keylistener()
-    #keylstnr.register_keys()
-    #keylstnr.start_listening()
+""" Path to the configuration file. """
 
 
 def ensure_config_file(path):
-    # Ensure configuration file exists.
+    """
+    Ensure configuration file exists, otherwise exit the app.
+
+    :param path: path to the configuration file
+    """
     if not os.path.isfile(path):
         logging.error('Error getting configuration file: \"%s\"' % path)
         sys.exit(1)
 
 
 def main():
+    """
+    Entry point of the app.
+    """
+
     # set up logger
     # read configuration file
     cfg_importer = ConfigImproter(CONFIG_PATH_IN)
@@ -66,10 +69,13 @@ def main():
         cfg = cfg_list[i]
 
         anki = AnkiExporter()
-        model_mngr = ModelManager(cfg, anki)
+        model_mngr = ModelManager(cfg, anki, cfg_importer._shortkey_saveall, cfg_importer._shortkey_clearall)
+        cons = Console(model_mngr, cfg_importer._shortkey_showstatus)
 
-        keylisten = Keylistener()
+        keylisten = Keylistener(cfg_importer._shortkey_quit)
         keylisten.register_observer(model_mngr)
+        keylisten.register_observer(cons)
+
         for field in model_mngr.get_fields():
             keylisten.register_observer(field)
 

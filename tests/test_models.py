@@ -29,7 +29,7 @@ cfg_not_unique = Config("Not unique names",
 def test_models_unique():
     "After Model Manager is created all config names should be unique"
     print("\n    test_models_unique")
-    model_mng = ModelManager(cfg_not_unique, AnkiExporterStub())
+    model_mng = ModelManager(cfg_not_unique, AnkiExporterStub(), SHORTKEY_SAVEALL_DEFAULT, SHORTKEY_CLEARALL_DEFAULT)
 
     assert cfg_not_unique.field_cfgs[0].observable_field is not "", "Still wrong observable name %s" % cfg_not_unique.field_cfgs[0].observable_field
 
@@ -63,7 +63,7 @@ def test_models_set_text():
     """Text should be correctly set to the field: all observers should be updated,
     in case text is too long it should be shortened"""
     print("\n    test_models_set_text")
-    model_mng = ModelManager(cfg_set_text, AnkiExporterStub())
+    model_mng = ModelManager(cfg_set_text, AnkiExporterStub(), SHORTKEY_SAVEALL_DEFAULT, SHORTKEY_CLEARALL_DEFAULT)
 
     field = model_mng.get_field("Question")
     assert field is not None
@@ -103,7 +103,7 @@ cfg_googletrans = Config("Google Translator",
 def test_models_googletrans():
     print("\n    test_models_googletrans")
 
-    model_mng = ModelManager(cfg_googletrans, AnkiExporterStub())
+    model_mng = ModelManager(cfg_googletrans, AnkiExporterStub(), SHORTKEY_SAVEALL_DEFAULT, SHORTKEY_CLEARALL_DEFAULT)
     field = model_mng.get_field("Question")
     assert field is not None
 
@@ -113,15 +113,16 @@ def test_models_googletrans():
     assert dataprov is not None
 
     dataprov.update_data(text_test_normal)
-    text = dataprov.get_text()
+    dataprov_text = dataprov.get_text()
 
-    assert text != text_test_normal, "after passing text to the data provider it has to be modified"
+    assert dataprov_text != text_test_normal, "after passing text to the data provider it has to be modified"
 
     field.set_text(text_test_normal)
     field = model_mng.get_field("Answer") #observer of the Question field
 
-    assert text == field.get_text(), "text returned by the field has to be equal to the text returned by the dataprovider \
-                                       as internally this field has to use the same dataprovider"
+    assert dataprov_text == field.get_text(), "text returned by the field has to be equal to the text returned by the dataprovider \
+                                      as internally this field has to use the same dataprovider\n field text: \"%s\"\n " \
+                                     "dataprovider text: \"%s\"" % (field.get_text(), dataprov_text)
 
 
 ############################################ test CLIPBOARD ###########################################################
@@ -135,7 +136,7 @@ cfg_clipboard = Config("Clipboard",
 def test_models_clipboard():
     print("\n    test_models_clipboard")
 
-    model_mng = ModelManager(cfg_clipboard, AnkiExporterStub())
+    model_mng = ModelManager(cfg_clipboard, AnkiExporterStub(), SHORTKEY_SAVEALL_DEFAULT, SHORTKEY_CLEARALL_DEFAULT)
     field = model_mng.get_field("Question")
     assert field is not None
 

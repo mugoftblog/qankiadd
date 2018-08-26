@@ -4,40 +4,36 @@
     <Modifier>ctrl</Modifier>
     <Modifier>shift</Modifier>
     <Key>s</Key>
+	<Keys>s</Keys>
   </SaveAll>
   <ClearAll>
     <Modifier>ctrl</Modifier>
     <Modifier>shift</Modifier>
+	<Modss>ss</Modss>
+	<Modaa>ssss</Modaa>
     <Key>l</Key>
   </ClearAll>
   <Quit>
     <Modifier>ctrl</Modifier>
     <Modifier>shift</Modifier>
-    <Key>`</Key>
+	<Modi>ss</Modi>
+    <Key>q</Key>
   </Quit>
-  <ShowStatus>
-    <Modifier>ctrl</Modifier>
-    <Modifier>shift</Modifier>
-    <Key>o</Key>
-  </ShowStatus>
+  <WRONG></WRONG>
   <Configuration name="Foreign Language">
+    <WRONG></WRONG>
     <Field name="Question" addmode="Ignore" required="True">
       <Modifier>ctrl</Modifier>
-      <Modifier>shift</Modifier>
+	    <WRONG></WRONG>
+      <Modifier>alt</Modifier>
       <Key>q</Key>
       <DataProvider>Clipboard</DataProvider>
     </Field>
-    <Field name="Answer" addmode="Write" required="True">
+    <Field name="Answer" addmode="WRONG" required="WRONG">
       <ObservableField>Question</ObservableField>
       <DataProvider>Googletranslate</DataProvider>
     </Field>
   </Configuration>
-  <Configuration name="Programming">
-    <Field addmode="Ignore" name="Question" required="True">
-      <Modifier>ctrl</Modifier>
-      <Key>q</Key>
-      <DataProvider>Clipboard</DataProvider>
-    </Field>
-    <Field addmode="Append" name="Answer"></Field>
+  <Configuration>
   </Configuration>
 </Root>

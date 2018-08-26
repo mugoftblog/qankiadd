@@ -1,22 +1,24 @@
 from enum import Enum
 from dataprov.factory import *
+
 """
-The calsses in this file contain configurtion descriptions.
-
-Each configuration contains the list of fields.
+The module contains configuration models.
+Each main configuration model consists of its name and the list of field configuration models.
 """
 
-
-
-##################defines######################
 
 class AddMode(Enum):
-    """ this enum describes how the information is added to the field after shortkey press
-    or after trigger execution
     """
-    Ignore = 0,  # ignore - if field is not empty do nothing
-    Write = 1,  # write - the field will be rewritten
-    Append = 2,  # append = new text will be appended to the field
+    Contains "addmode" types. Each "addmode" type describes how the data
+    should be added to the field.
+    """
+
+    Ignore = 0,
+    """ ignore - if the field already contains some data do not update field's data """
+    Write = 1,
+    """ write - the data of the field will be rewritten by new data """
+    Append = 2,
+    """ append - new data will be appended to the already existing field's data """
 
 
 def print_cfg(cfg):
@@ -25,13 +27,26 @@ def print_cfg(cfg):
 
 
 class FieldCfg:
-    def __init__(self, name, shortkey=None, observable_field=None, addmode=AddMode.Write, required=False, dataprov_type=None):
+    def __init__(self, name, shortkey=None, observable_field=None, addmode=AddMode.Write,
+                 dataprov_type=None, required=False):
         """
-        :param name:
-        :param shortkey:
-        :param observer: observer which should be notified about new data every time data of this field is changed
-        :param addmode:
-        :param automode:
+        Field configuration model. Contains the information which should be used to set up correct
+        behaviour of the field model and to create correct linking between field models,
+        listened shortkeys, various data providers and etc.
+
+        :param name: name of the field
+        :param shortkey: shortkey of the field which should be used to set up the data of the field \
+        using the specified data provider
+        :type shortkey: :data:`keylistener.SHORTKEY_EXAMPLE` @TODO format of the shortkey in the configuration model \
+        should not tightly couple on the format of the shortkey in the keylistener module. New converter function \
+        should be introduced.
+        :param observable_field: observable field which should notify this field about new data every time \
+        data of the observable field is changed
+        :type observable_field: :class:`.FieldCfg`
+        :param addmode: :class:`.AddMode`
+        :param required: indicates whether the field can be exported even if it is empty (False) or not (True)
+        :type required: bool
+        :param dataprov_type: :class:`.dataprov.factory.DataProvType`
         """
         self.name = name
         self._shortkey = shortkey
@@ -42,14 +57,16 @@ class FieldCfg:
 
 
 class Config:
-    def __init__(self, name, field_cfgs=[], autosave=True):
+    def __init__(self, name, field_cfgs=(), autosave=True):
         """
+        Main configuration model.
+
         :param name: name of the configuration
-        :param fields: array with field models
-        :param autosave: TODO ?? what is that - if all fields are full then save in file
+        :param field_cfgs: list of the field configuration models
+        :param autosave: True: if all fields are full then save in the file automatically.
         """
         self.name = name
         self.autosave = autosave
-         # check if field names are unique. If not - add _1 or _2 at the end. Also update observers
+        # check if field names are unique. If not - add _1 or _2 at the end. Also update observers
         self.field_cfgs = field_cfgs
 

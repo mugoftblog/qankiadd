@@ -6,8 +6,7 @@ import logging
 """
 This module is an entry point for getting the required data provider.
 
-After new data provider is added (see module "interface" for details)
-this file should be updated. 
+After new data provider is added this file should be updated.
 First of all new data provider type has to be added.
 Second of all the method returning an instance of the concrete factory
 for the specified type has to be updated.
@@ -23,17 +22,23 @@ __version__ = '0.1' #Versioning: http://www.python.org/dev/peps/pep-0386/
 class DataProvType(Enum):
     """
     All available data provider types.
-    After adding new data provider add new type in this Enum
+
+    NOTE: After adding new data provider add new type in this Enum!!!
     """
-    Clipboard = 0,  # information should be added from clipboard @TODO selected text
-    Googletranslate = 1,  # information will be automatically translated via google translate module
-    Googleimage = 2,  # information will be automatically found and added via google image module
+
+    Clipboard = 0,
+    """ :class:`.clipboard.Clipboard` data provider should be used """
+    Googletranslate = 1,
+    """ :class:`.google.Google` data provider should be used """
+    Googleimage = 2,
+    """ @TODO :class:`.googleimg.GoogleImage` data provider should be used """
 
 
 def get_dataprov_factory(dataprov_type):
     """
-    Function which returns concrete object of the specified data provider.
-    After adding new data provider please extend this function.
+    Function which returns concrete factory instance of the specified data provider.
+
+    NOTE: After adding new data provider please extend this function!!!
 
     param dataprov_type: the type of the data provider
     """

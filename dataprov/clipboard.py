@@ -4,6 +4,9 @@ import logging
 
 
 class Clipboard(DataProv):
+    """
+    Clipboard data provider. Returns the data stored in the clipboard buffer.
+    """
     def update_data(self, text):
         win32clipboard.OpenClipboard()
         try:
@@ -20,5 +23,8 @@ class Clipboard(DataProv):
 
 
 class ClibpboardFactory(DataProvFactory):
+    """
+    Factory for the :class:`Clipboard` data provider.
+    """
     def __init__(self):
         DataProvFactory.dataprov = Clipboard()

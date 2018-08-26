@@ -15,15 +15,29 @@
     <Modifier>shift</Modifier>
     <Key>q</Key>
   </Quit>
+  <ShowStatus>
+    <Modifier>ctrl</Modifier>
+    <Modifier>shift</Modifier>
+    <Key>o</Key>
+  </ShowStatus>
   <Configuration name="Foreign Language">
-    <Field addmode="Ignore" name="ChangedName 0" required="True">
+    <Field addmode="Ignore" name="Question" required="True">
+      <Modifier>ctrl</Modifier>
+      <Modifier>alt</Modifier>
+      <Key>q</Key>
+      <DataProvider>Clipboard</DataProvider>
+    </Field>
+    <Field addmode="Write" name="Answer" required="True">
+      <ObservableField>Question</ObservableField>
+      <DataProvider>Googletranslate</DataProvider>
+    </Field>
+  </Configuration>
+  <Configuration name="Programming">
+    <Field addmode="Ignore" name="Question" required="True">
       <Modifier>ctrl</Modifier>
       <Key>q</Key>
       <DataProvider>Clipboard</DataProvider>
     </Field>
-    <Field addmode="Write" name="ChangedName 1" required="True">
-      <ObservableField>Question</ObservableField>
-      <DataProvider>Googletranslate</DataProvider>
-    </Field>
+    <Field addmode="Append" name="Answer"></Field>
   </Configuration>
 </Root>

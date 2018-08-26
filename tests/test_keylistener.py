@@ -9,7 +9,54 @@ import time
 from threading import Thread
 from tests.stubs.exporting.anki import *
 
-HOTKEY_RANDOM = ("ctrl", "p")
+
+################################################## COMMON ############################################################
+def __shortkey_to_vk(shortkey):
+    """
+    This function maps names from the passed shorkety to the virtual codes
+    :param shortkey: shortkey to map to virtual codes
+    :return: shortkey where strings (shortkey names) are replaced by the related virtual codes
+    """
+    mod_to_vk = ()
+    modifiers = shortkey[0]
+    for mod in modifiers:
+        mod_to_vk += (NAME_TO_VK_TABLE[mod],)
+
+    ret = (mod_to_vk, NAME_TO_VK_TABLE[shortkey[1]])
+    return ret
+
+
+def __press_shortkey(shortkey):
+    """
+    This function simulate shortkey press
+    :param shortkey: shortkey to be pressed
+    :return:
+    """
+    shortkey_to_vk = __shortkey_to_vk(shortkey)
+
+    modifiers_vk = shortkey_to_vk[0]
+    key_vk = shortkey_to_vk[1]
+
+    # first press modifiers
+    for mod_vk in modifiers_vk:
+        win32api.keybd_event(mod_vk, 0, 0, 0)
+        time.sleep(0.05)
+
+    # then press the key
+    win32api.keybd_event(key_vk, 0, 0, 0)
+    time.sleep(0.05)
+
+    # key up for modifiers
+    for mod_vk in modifiers_vk:
+        win32api.keybd_event(mod_vk, 0, win32con.KEYEVENTF_KEYUP, 0)
+        time.sleep(0.05)
+
+    # key up for the key
+    win32api.keybd_event(key_vk, 0, win32con.KEYEVENTF_KEYUP, 0)
+    time.sleep(0.05)
+
+
+SHORTKEY_RANDOM = (("ctrl",), "p")
 
 # is_save_all_called = False
 #
@@ -21,45 +68,25 @@ HOTKEY_RANDOM = ("ctrl", "p")
 
 
 ############################################ test SIMPLE ##############################################################
-HOTKEY_QUESTION_SIMPLE = ("ctrl", "b")
-HOTKEY_ANSWER_SIMPLE = ("", "")
+SHORTKEY_QUESTION_SIMPLE = (("ctrl", "shift"), "b")
+SHORTKEY_ANSWER_SIMPLE = (("",), "")  # just make it empty as this key will not be used during the test
 
 cfg_simple = Config("Simple",
-                [FieldCfg("Question", HOTKEY_QUESTION_SIMPLE, None, AddMode.Ignore, DataProvType.Googletranslate),
-                 FieldCfg("Answer", HOTKEY_ANSWER_SIMPLE, None, AddMode.Ignore, DataProvType.Googletranslate),
+                [FieldCfg("Question", SHORTKEY_QUESTION_SIMPLE, None, AddMode.Ignore, DataProvType.Googletranslate),
+                 FieldCfg("Answer", SHORTKEY_ANSWER_SIMPLE, None, AddMode.Ignore, DataProvType.Googletranslate),
                  ],
                 False)
 
 
 def _press_keys_simple():
-    # press the key which notifies field "Questio"
-    time.sleep(1)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_QUESTION_SIMPLE[0]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_QUESTION_SIMPLE[1]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_QUESTION_SIMPLE[0]], 0, win32con.KEYEVENTF_KEYUP, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_QUESTION_SIMPLE[1]], 0, win32con.KEYEVENTF_KEYUP, 0)
+    # press the key which notifies field "Question"
+    __press_shortkey(SHORTKEY_QUESTION_SIMPLE)
 
     # press some random key
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_RANDOM[0]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_RANDOM[1]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_RANDOM[0]], 0, win32con.KEYEVENTF_KEYUP, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_RANDOM[1]], 0, win32con.KEYEVENTF_KEYUP, 0)
+    __press_shortkey(SHORTKEY_RANDOM)
 
     # press the key to stop keys listening
-    time.sleep(0.2)
-    win32api.keybd_event(NAME_TO_VK_TABLE[KEY_QUIT_TUPLE_STR[0]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[KEY_QUIT_TUPLE_STR[1]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[KEY_QUIT_TUPLE_STR[0]], 0, win32con.KEYEVENTF_KEYUP, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[KEY_QUIT_TUPLE_STR[1]], 0, win32con.KEYEVENTF_KEYUP, 0)
+    __press_shortkey(SHORTKEY_QUIT_DEFAULT)
 
 
 def test_keylistener_simple():
@@ -82,10 +109,10 @@ def test_keylistener_simple():
             - keylistener should be stopped at the end
         """
     print("\n    test_keylistener_simple")
-    model_mng = ModelManager(cfg_simple, AnkiExporterStub())
+    model_mng = ModelManager(cfg_simple, AnkiExporterStub(), SHORTKEY_SAVEALL_DEFAULT, SHORTKEY_CLEARALL_DEFAULT)
 
     # Register observers for keylistener (in case observer has a valid key)
-    keylisten = Keylistener()
+    keylisten = Keylistener(SHORTKEY_QUIT_DEFAULT)
     keylisten.register_observer(model_mng)
     for field in model_mng.get_fields():
         keylisten.register_observer(field)
@@ -115,72 +142,48 @@ def test_keylistener_simple():
 
 
 ############################################ test WRONG KEY ###########################################################
-HOTKEY_QUESTION_WRONG_KEY = ("ctrl", "ää")
-HOTKEY_ANSWER_WRONG_KEY = ("ctrl", "ctrl")
-HOTKEY_OTHER_WRONG_KEY = ("ä", "a")
-HOTKEY_IMAGE_WRONG_KEY = (KEY_QUIT_TUPLE_STR[0], KEY_QUIT_TUPLE_STR[1])
-HOTKEY_SOUND_WRONG_KEY = (KEY_SAVE_TUPLE_STR[0], KEY_SAVE_TUPLE_STR[1])
+SHORTKEY_QUESTION_WRONG_KEY = (("ctrl",), "ää")
+
+SHORTKEY_ANSWER_WRONG_KEY = (("ctrl",), "SA")
+
+SHORTKEY_OTHER_WRONG_KEY = (("ä",), "a")
+
+SHORTKEY_IMAGE_WRONG_KEY = ((SHORTKEY_QUIT_DEFAULT[0][0], SHORTKEY_QUIT_DEFAULT[0][1]),
+                            SHORTKEY_QUIT_DEFAULT[1])
+
+SHORTKEY_SOUND_WRONG_KEY = ((SHORTKEY_SAVEALL_DEFAULT[0][0], SHORTKEY_SAVEALL_DEFAULT[0][1]),
+                            SHORTKEY_SAVEALL_DEFAULT[1])
 
 cfg_wrong_key = Config("Simple",
-                [FieldCfg("Question", HOTKEY_QUESTION_WRONG_KEY, None, AddMode.Ignore, DataProvType.Googletranslate),
-                 FieldCfg("Answer", HOTKEY_ANSWER_WRONG_KEY, None, AddMode.Ignore, DataProvType.Googletranslate),
-                 FieldCfg("Other", HOTKEY_OTHER_WRONG_KEY, None, AddMode.Ignore, DataProvType.Googletranslate),
-                 FieldCfg("Image", HOTKEY_IMAGE_WRONG_KEY, None, AddMode.Ignore, DataProvType.Googletranslate),
-                 FieldCfg("Sound", HOTKEY_SOUND_WRONG_KEY, None, AddMode.Ignore, DataProvType.Googletranslate),
+                [FieldCfg("Question", SHORTKEY_QUESTION_WRONG_KEY, None, AddMode.Ignore, DataProvType.Googletranslate),
+                 FieldCfg("Answer", SHORTKEY_ANSWER_WRONG_KEY, None, AddMode.Ignore, DataProvType.Googletranslate),
+                 FieldCfg("Other", SHORTKEY_OTHER_WRONG_KEY, None, AddMode.Ignore, DataProvType.Googletranslate),
+                 FieldCfg("Image", SHORTKEY_IMAGE_WRONG_KEY, None, AddMode.Ignore, DataProvType.Googletranslate),
+                 FieldCfg("Sound", SHORTKEY_SOUND_WRONG_KEY, None, AddMode.Ignore, DataProvType.Googletranslate),
                  ],
                 False)
 
 
 def _press_keys_wrong_key():
-    # press the key which notifies field "Answer"
-    time.sleep(1)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_ANSWER_WRONG_KEY[0]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_ANSWER_WRONG_KEY[1]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_ANSWER_WRONG_KEY[0]], 0, win32con.KEYEVENTF_KEYUP, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_ANSWER_WRONG_KEY[1]], 0, win32con.KEYEVENTF_KEYUP, 0)
-
-    # press some random key
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_RANDOM[0]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_RANDOM[1]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_RANDOM[0]], 0, win32con.KEYEVENTF_KEYUP, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[HOTKEY_RANDOM[1]], 0, win32con.KEYEVENTF_KEYUP, 0)
+    # press some random keyb
+    __press_shortkey(SHORTKEY_RANDOM)
 
     # press the key to save all fields
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[KEY_SAVE_TUPLE_STR[0]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[KEY_SAVE_TUPLE_STR[1]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[KEY_SAVE_TUPLE_STR[0]], 0, win32con.KEYEVENTF_KEYUP, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[KEY_SAVE_TUPLE_STR[1]], 0, win32con.KEYEVENTF_KEYUP, 0)
+    __press_shortkey(SHORTKEY_SAVEALL_DEFAULT)
 
     # press the key to stop keys listening
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[KEY_QUIT_TUPLE_STR[0]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[KEY_QUIT_TUPLE_STR[1]], 0, 0, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[KEY_QUIT_TUPLE_STR[0]], 0, win32con.KEYEVENTF_KEYUP, 0)
-    time.sleep(0.05)
-    win32api.keybd_event(NAME_TO_VK_TABLE[KEY_QUIT_TUPLE_STR[1]], 0, win32con.KEYEVENTF_KEYUP, 0)
+    __press_shortkey(SHORTKEY_QUIT_DEFAULT)
 
 
 def test_keylistener_wrong_key():
     """
         Preconditions:
             fields:
-            - 1st field contains invalid vk name
-            - 2nd has the same name for modifier and vk
-            - 3rd has invalid modifier name
-            - 4th has reserved hotkey (for quiting app)
-            - 5th has already used hotkey (for saving, from model manager)
+            - 1st field has invalid vk name (NOT REGISTERED AS OBSERVER)
+            - 2nd  has invalid vk name (NOT REGISTERED AS OBSERVER)
+            - 3rd has invalid modifier name (REGISTERED AS OBSERVER)
+            - 4th has reserved hotkey (for quiting app) (NOT REGISTERED AS OBSERVER)
+            - 5th has already used hotkey (for saving, from model manager) (REGISTERED AS OBSERVER)
         Procedure:
             - start keylistener and register all fields as observers
             - press shortkey of the second field
@@ -190,25 +193,26 @@ def test_keylistener_wrong_key():
         Explanation:
             As all shortkeys are invalid text of the fields should not be changed
         Expectation:
-            - only model manager should be registered by keylistener
-            - the text of all fields is emply
-            - "save all fields" command should be executed successfully
+            - only 2 fields and model manager should be registered by keylistener as observers (3 in total)
+            - the text of the first 3 fields is empty
+            - the text of the last 2 fields is not empty
+            - "save all fields" command is executed successfully
             - keylistener is stopped
         """
     print("\n    test_keylistener_wrong_key")
     anki_stub = AnkiExporterStub()
-    model_mng = ModelManager(cfg_wrong_key, anki_stub)
+    model_mng = ModelManager(cfg_wrong_key, anki_stub, SHORTKEY_SAVEALL_DEFAULT, SHORTKEY_CLEARALL_DEFAULT)
     # global is_save_all_called
     # is_save_all_called = False
     # model_mng.save_all = save_all_stub
 
     # Register observers for keylistener (in case observer has a valid key)
-    keylisten = Keylistener()
+    keylisten = Keylistener(SHORTKEY_QUIT_DEFAULT)
     keylisten.register_observer(model_mng)
     for field in model_mng.get_fields():
         keylisten.register_observer(field)
 
-    assert len(keylisten._observers) == 1, "Only model manager should be registered"
+    assert len(keylisten._observers) == 3, "Registered observers expected: 4 but got: %d" % len(keylisten._observers)
 
     # Run thread which presses field hotkey and at the end quit hotkey
     thread = Thread(target=_press_keys_wrong_key)
@@ -217,10 +221,14 @@ def test_keylistener_wrong_key():
     keylisten.start_listening()
     thread.join()
 
-    for field in model_mng.get_fields():
+    fields = model_mng.get_fields()
+    for field in fields[:3]:
         assert field.get_text() == "", "Expect to see text \n \"%s\" \n but see\n \"%s\" " % \
                                                   ("", field.get_text())
 
+    for field in fields[3:len(fields)]:
+        assert field.get_text() != "", "Expect to see not empty text but see\n \"%s\" " % \
+                                                  ( field.get_text())
 
     assert anki_stub._write_calls_n == 1, "KEY_SAVE_TUPLE_STR shortkey was not handled correctly"
 

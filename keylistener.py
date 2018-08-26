@@ -1,3 +1,8 @@
+"""
+The module responsible for listening of the shortkeys pressed by a user and passing the information
+about the pressed keys to the observers. This module can be used only under Windows OS.
+"""
+
 import ctypes
 import logging
 import sys
@@ -8,19 +13,23 @@ import win32con
 
 byref = ctypes.byref
 
+
+MOD_INVALID = 0x0000
+""" Invalid modifier code. """
+
 NAME_TO_MOD_TABLE = {
     'shift': win32con.MOD_SHIFT,
     'ctrl': win32con.MOD_CONTROL,
     'alt': win32con.MOD_ALT,
     'win': win32con.MOD_WIN,
 }
+""" Dictionary with {modifier name: modifier code} pairs. """
 
-MOD_INVALID = 0x0000
-
-# create a dictionary with modifier code as a value and modifier name as a key
 MOD_TO_NAME_TABLE = {}
+""" Dictionary with {modifier code: modifier name} pairs. """
 for name, mod in NAME_TO_MOD_TABLE.items():
     MOD_TO_NAME_TABLE[mod] = name
+
 
 NAME_TO_VK_TABLE = {'backspace': 0x08,
                     'tab': 0x09,
@@ -168,17 +177,60 @@ NAME_TO_VK_TABLE = {'backspace': 0x08,
                     ']': 0xDD,
                     "'": 0xDE,
                     '`': 0xC0}
+""" Dictionary with {key name: key code} pairs. """
 
-# create a dictionary with keyboard key code as a value and keyboard key name as a key
 VK_TO_NAME_TABLE = {}
+""" Dictionary with {key code: key name} pairs. """
 for name, vk in NAME_TO_VK_TABLE.items():
     VK_TO_NAME_TABLE[vk] = name
 
-KEY_QUIT_CODES_DEFAULT = (NAME_TO_MOD_TABLE['ctrl'] | NAME_TO_MOD_TABLE['shift'], NAME_TO_VK_TABLE['q'])
+
+def shortkey_to_codes(shortkey):
+    """
+    This function maps key/modifier name from the passed shorkety to the virtual codes.
+
+    :param shortkey: shortkey to map to virtual codes.
+    :type shortkey: tuple (see :data:`.SHORTKEY_EXAMPLE`)
+    :return: shortkey where strings (shortkey names) are replaced by the related virtual codes.
+    """
+    mod_code = 0
+    for mod in shortkey[0]:
+        code = NAME_TO_MOD_TABLE.get(mod, None)
+        if code is not None:
+            mod_code |= code
+        else:
+            mod_code = 0
+            break
+
+    key_code = NAME_TO_VK_TABLE.get(shortkey[1], None)
+
+    ret = None
+    if (mod_code != 0) and (key_code is not None):
+        ret = (mod_code, key_code)
+
+    return ret
+
+
+SHORTKEY_QUIT_DEFAULT = (('ctrl', 'shift'), 'q')
+""" Deault shortkey to quit the keylistener.  """
+SHORTKEY_QUIT_DEFAULT_CODES = (NAME_TO_MOD_TABLE[SHORTKEY_QUIT_DEFAULT[0][0]] | NAME_TO_MOD_TABLE[SHORTKEY_QUIT_DEFAULT[0][1]],
+                               NAME_TO_VK_TABLE[SHORTKEY_QUIT_DEFAULT[1]])
+
+
+SHORTKEY_EXAMPLE = (('alt', 'ctrl', 'shift', 'win'), 'o')
+""" Example of the shortkey with the correct format. Each shortkey must be a tuple \
+and must have the following format: ((modifier_name1, modifier_name2, ..., modifier_nameN), key_name)"""
 
 
 class KeylistenerObserver:
     def __init__(self, shortkeys):
+        """
+        Base observer class which should be inherited by sublasses to be able to register shortkeys and to start
+        receiving the notification from :class:`.Keylistener` about the pressed shortkeys.
+
+        :param shortkeys: The list of the shortkeys to register for listening.
+        :type shortkeys: list of shortkeys (see :data:`.SHORTKEY_EXAMPLE`)
+        """
         self._shortkeys = []
         if shortkeys is not None:
             if isinstance(shortkeys, list):
@@ -197,36 +249,107 @@ class KeylistenerObserver:
                         do_raise = True
 
     def key_pressed(self, shortkey):
+        """
+        This function is called whenever the registered shortkey is pressed. This function
+        must be overwritten by subclasses.
+
+        :param shortkey: the pressed registered shortkey.
+        :type shortkey: tuple (see :data:`.SHORTKEY_EXAMPLE`)
+        :return: None
+        """
         raise NotImplementedError('subclasses must override NotifyKeyPressed(id)!')
 
     def get_keys(self):
+        """
+        Returns all shortkeys to register.
+
+        :return: shortkeys to register
+        :rtype: list of shortkeys (see :data:`.SHORTKEY_EXAMPLE`)
+        """
         return self._shortkeys
+
+    def compare_shortkeys(self, shortkey_expect, shortkey):
+        """
+        Compares two shortkeys
+
+        :param shortkey_expect: first shortkey to compare
+        :type shortkey: tuple (see :data:`.SHORTKEY_EXAMPLE`)
+        :param shortkey: second shortkey to compare
+        :type shortkey: tuple (see :data:`.SHORTKEY_EXAMPLE`)
+        :return: True if the shortkeys the same False in case the shortkeys differ
+        :rtype: bool
+        """
+        ret = True
+
+        if len(shortkey[0]) != len(shortkey_expect[0]):
+            # if tuple length differ from the expected tuple length
+            ret = False
+        else:
+            for modifier in shortkey[0]:
+                if modifier not in shortkey_expect[0]:
+                    # if at least one of the modifiers not in the expected tuple
+                    ret = False
+
+        if ret:
+            if shortkey[1] != shortkey_expect[1]:
+                # if keyboard key is not the same as expected
+                ret = False
+
+        return ret
 
 
 class Keylistener:
-    """
-    The class is responsible for listening hotkeys pressed.
+    def __init__(self, shortkey_quit):
+        """
+        The class is responsible for listening shortkeys pressed by a user.
 
-    The class is responsible for listening hotkeys pressed. If hotkey was pressed it extratcts necessery information
-    from the message and pass this information to the GUI object, which further decides how to handle this information.
-    """
-
-    def __init__(self):
+        The class is responsible for listening shortkeys pressed. After the registered shortkey is pressed
+        it extratcts necessery information from the message and pass this information to the observers,
+        which further decide how to handle this shortkey press.
+        """
         self._observers = []
         self._key_ids = []  # list of tuples in the format (key_id, lparam)
         self._key_id_last = 0
-        self._key_code_quit = KEY_QUIT_CODES_DEFAULT
+
+        if shortkey_quit is None:
+            self._key_code_quit = SHORTKEY_QUIT_DEFAULT_CODES
+        else:
+            self._key_code_quit = shortkey_to_codes(shortkey_quit)
+
+    def _get_lparam(self, modifier_code, key_code):
+        """
+        Returns lparam which represents 32 bit value which stores passed modifier virtual codes and key virtual code.
+
+        :param modifier_code: modifier virtual code
+        :param key_code: key virtual code
+        :return: 32 bit lparam value
+        :rtype: int
+        """
+        lparam = (key_code << 16) | modifier_code
+        return lparam
 
     def _store_regitered_key(self, modifier_code, key_code):
-        logging.debug("_store_regitered_key %s %s" % (modifier_code, key_code))
-        lparam = (key_code << 16) | modifier_code
+        """
+        Stores passed modifier and key virtual codes in the list. Later it can be used e.g. for checking
+        wether the shortkey with the specified modifier and key codes are already registered or not.
 
-        logging.debug("lparam stored 0x%x with id %u" % (lparam, self._key_id_last ))
+        :param modifier_code:
+        :param key_code:
+        :return: None
+        """
+        lparam = self._get_lparam(modifier_code, key_code)
 
         self._key_ids.append((self._key_id_last, lparam))
         self._key_id_last += 1
 
     def _unregister_key(self, key_id):
+        """
+        Stop listening the shortkey with the specified id.
+
+        :param key_id: id of the shortkey to unregister
+        :return: True if success, False if can't unregister.
+        :rtype: bool
+        """
         ret = False
         logging.debug("Unregistering key with id %u" % key_id[0])
         if not windll.user32.UnregisterHotKey(None, key_id[0]):
@@ -237,12 +360,26 @@ class Keylistener:
         return ret
 
     def _register_key_by_code(self, modifier_code, key_code):
+        """
+        Start listening the shortkey with the specified modifier and key virtual codes.
+
+        :param modifier_code: modifier virtual codes of the shortkey to register.
+        :param key_code: key virtual code of the shortkey to register.
+        :return: True if success, False if can't register the shortkey.
+        :rtype: bool
+        """
         logging.debug("_register_key_by_code %s %s" % (modifier_code, key_code))
         ret = False
         if (modifier_code != MOD_INVALID) and (key_code is not None):
             is_key_registered = False
 
             # TODO check if it is already registered or not
+            for key_tuple in self._key_ids:
+                lparam = self._get_lparam(modifier_code, key_code)
+                is_key_registered = set((lparam,)).issubset(key_tuple)
+                if is_key_registered:
+                    logging.debug("the key is already registered")
+                    break
 
             if not is_key_registered:
                 logging.info("Registering shortkey (\'%u\', \'%u\')" % (modifier_code, key_code))
@@ -258,6 +395,14 @@ class Keylistener:
         return ret
 
     def _register_key(self, shortkey):
+        """
+        Start listening the shortkey
+
+        :param shortkey: the shortkey to register.
+        :type shortkey: tuple (see :data:`.SHORTKEY_EXAMPLE`)
+        :return: True if success, False if can't register the shortkey.
+        :rtype: bool
+        """
         logging.debug("_register_key %s", shortkey)
 
         mod_code = MOD_INVALID
@@ -276,23 +421,33 @@ class Keylistener:
         return self._register_key_by_code(mod_code, key_code)
 
     def register_observer(self, observer):
+        """
+        Register observer which wants to receive notifications about pressed registered shortkeys.
+
+        :param observer: observer sublass (see :class:`.KeylistenerObserver`)
+        :return: None
+        """
         if issubclass(type(observer), KeylistenerObserver):
+            n_registered_key = 0
             for key in observer.get_keys():
                 if self._register_key(key):
-                    self._observers.append(observer)
+                    n_registered_key += 1
+            if n_registered_key > 0:
+                self._observers.append(observer)
         else:
             logging.error("KeylistenerObserver is expected")
             sys.exit(1)
 
     def start_listening(self):
-        """ Start key press monitoring - in case key is pressed, take the action """
+        """
+        Start key press monitoring - in case registered key is pressed, registered observers are notified
+        """
         logging.debug("Key listening is STARTED")
         self._register_key_by_code(self._key_code_quit[0], self._key_code_quit[1])
         try:
             msg = wintypes.MSG()
             while windll.user32.GetMessageA(byref(msg), None, 0, 0) != 0:
                 if msg.message == win32con.WM_HOTKEY:
-                    logging.debug("lparam received 0x%x with id %u" % (msg.lParam, msg.wParam ))
                     key_code = (msg.lParam >> 16) & 0xFFFF
                     mod_codes = msg.lParam & 0xFFFF
                     logging.debug("Key is pressed (%s, %s)" % (mod_codes, key_code))

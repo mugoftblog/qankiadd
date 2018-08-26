@@ -8,9 +8,9 @@ Anki exporter allows to save fields with questions, answers and other fields int
 """
 
 
-class AnkiExporterStub(FileExporter):
+class AnkiExporterStub(TextFileExporter):
     def __init__(self):
-        FileExporter.__init__(self)
+        TextFileExporter.__init__(self)
         self.filename = "anki"
         self.extension = "txt"
         self._write_calls_n = 0  # how many times "write" function was called
