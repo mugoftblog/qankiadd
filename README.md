@@ -1,6 +1,11 @@
 # qankiadd
-Quick Anki Add - fast creation of the cards for Anki
 
-see https://mugoft.com/qankiadd_first%20commit.html for the introduction
+Quick Anki Add - fast creation of the flash cards for Anki
 
-see https://mugoft.com/category/qankiadd.html for the latest news.
+
+## Links:
+
+- Introduction: https://mugoft.com/introduction.html
+- How to use: under_developement
+- Code documentation: https://mugoft.com/qankiadd/modules.html
+- Latest news: https://mugoft.com/category/qankiadd.html
