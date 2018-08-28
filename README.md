@@ -8,9 +8,9 @@ The target of this project - create the system which understands your thoughts, 
 ## Links:
 
 - Introduction: https://mugoft.com/introduction.html
-- Developers guide: under_developement
+- Developers guide: under_developement.
 - Code documentation: https://mugoft.com/qankiadd/modules.html
-- Installation and usage guide: under_developement
+- Installation and usage guide: under_developement.
 - Project news: https://mugoft.com/category/qankiadd.html
 
 
